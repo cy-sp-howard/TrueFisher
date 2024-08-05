@@ -1,13 +1,16 @@
 ﻿using Blish_HUD;
+using Blish_HUD.Controls;
 using Blish_HUD.Modules;
 using Blish_HUD.Modules.Managers;
 using Blish_HUD.Settings;
+using Blish_HUD.Settings.UI.Views;
 using Microsoft.Xna.Framework;
 using System;
 using System.ComponentModel.Composition;
+using System.Runtime;
 using System.Threading.Tasks;
 
-namespace TrueFisher
+namespace BhModule.TrueFisher
 {
     [Export(typeof(Blish_HUD.Modules.Module))]
     public class Module : Blish_HUD.Modules.Module
@@ -21,12 +24,17 @@ namespace TrueFisher
         internal DirectoriesManager DirectoriesManager => this.ModuleParameters.DirectoriesManager;
         internal Gw2ApiManager Gw2ApiManager => this.ModuleParameters.Gw2ApiManager;
         #endregion
+        public ModuleSettings Settings { get; private set; }
 
         [ImportingConstructor]
-        public Module([Import("ModuleParameters")] ModuleParameters moduleParameters) : base(moduleParameters) { }
+        public Module([Import("ModuleParameters")] ModuleParameters moduleParameters) : base(moduleParameters) {
+            Console.WriteLine("hellpw");
+        }
 
         protected override void DefineSettings(SettingCollection settings)
         {
+            this.Settings = new ModuleSettings(this, settings);
+
 
         }
 

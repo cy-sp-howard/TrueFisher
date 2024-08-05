@@ -4,9 +4,10 @@
   <PropertyGroup>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>TrueFisher</RootNamespace>
+    <RootNamespace>BhModule.TrueFisher</RootNamespace>
     <AssemblyName>TrueFisher</AssemblyName>
     <TargetFrameworkVersion>v4.8.1</TargetFrameworkVersion>
+	  <LangVersion>12</LangVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
     <ProjectGuid>{DB179B46-7428-4164-AE8F-5D95D10829B3}</ProjectGuid>
@@ -32,12 +33,11 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Module.cs" />
+    <Compile Include="ModuleSettings.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="TrueFisher.csproj.user" />
     <Content Include="manifest.json" />
-    <Content Include="TrueFisher.sln" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Win32.Primitives" />
@@ -70,9 +70,6 @@
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.Text.RegularExpressions" />
     <Reference Include="System.Xml.ReaderWriter" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="BlishHUD">
