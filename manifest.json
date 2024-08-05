@@ -1,0 +1,19 @@
+{
+  "name": "True Fisher",
+  "version": "0.0.0-alpha",
+  "namespace": "True.Fisher",
+  "package": "TrueFisher.dll",
+  "manifest_version": 1,
+
+  "description": "Description of your module. Visit https://github.com/blish-hud/manifest.json/blob/master/manifest-v1.md for details about the manifest format.",
+  "dependencies": {
+    "bh.blishhud": ">=1.0.0"
+  },
+  "url": "https://github.com/user/TrueFisher",
+  "contributors": [
+    {
+      "name": "yeh",
+      "username": "****"
+    }
+  ]
+}
