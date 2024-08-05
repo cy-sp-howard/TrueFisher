@@ -25,8 +25,7 @@ namespace BhModule.TrueFisher
             InitKeyBindSettings(settings);
         }
         private void InitKeyBindSettings(SettingCollection settings) {
-            this.KeyBindSettings = settings.AddSubCollection(KEYBIND_SETTINGS,true);
-            this.Key_Skill_1 = this.KeyBindSettings.DefineSetting(nameof(this.Key_Skill_1), new KeyBinding(Keys.D1), () => "Skill 1 Key", () => "For Cast Line skill");
+            this.Key_Skill_1 = settings.DefineSetting(nameof(this.Key_Skill_1), new KeyBinding(Keys.D1), () => "Skill 1 Key", () => "For Cast Line skill");
             this.Key_Skill_1.Value.Enabled = true;
         }
     }

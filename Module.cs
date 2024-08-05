@@ -45,7 +45,7 @@ namespace BhModule.TrueFisher
 
         protected override async Task LoadAsync()
         {
-
+            
         }
 
         protected override void OnModuleLoaded(EventArgs e)
@@ -57,7 +57,10 @@ namespace BhModule.TrueFisher
 
         protected override void Update(GameTime gameTime)
         {
-
+            var b = GameService.GameIntegration.Gw2Instance.Gw2Process.Handle;
+            var a = GameService.Gw2Mumble.PlayerCharacter.Forward.Y;
+            //"Gw2-64.exe"+027A2D38
+            MemUtil.WriteMem(b,);
         }
 
         /// <inheritdoc />
