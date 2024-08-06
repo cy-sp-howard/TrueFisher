@@ -9,6 +9,11 @@ using System;
 using System.ComponentModel.Composition;
 using System.Runtime;
 using System.Threading.Tasks;
+using BhModule.TrueFisher.Utils;
+using BhModule.TrueFisher.Automatic;
+using SharpDX.Direct3D11;
+using System.Diagnostics;
+using System.Collections.Generic;
 
 namespace BhModule.TrueFisher
 {
@@ -17,6 +22,8 @@ namespace BhModule.TrueFisher
     {
 
         private static readonly Logger Logger = Logger.GetLogger<Module>();
+         public FishService FishService { get; private set; }
+         public PathService PathService  { get; private set; }
 
         #region Service Managers
         internal SettingsManager SettingsManager => this.ModuleParameters.SettingsManager;
@@ -38,29 +45,43 @@ namespace BhModule.TrueFisher
 
         }
 
+        // game attached run; use --module "**.bhm"   will call when Blish BeginRun()
+        public Mem<T> abc<T>()
+        {
+            var a= new Mem<byte[]>() { address = 0x11, value = [ 3, 2,4 ,7]};
+            if (typeof(T) == typeof(int))
+            {
+                var b = new Mem<int>() { address = a.address, value = BitConverter.ToInt32(a.value,0) };
+                return (Mem<T>)(object)b;
+            }
+            return (Mem<T>)(object)a;
+        }
         protected override void Initialize()
         {
 
+            int a = -2;
+
+            FishState b = (FishState)a;
+            Trace.WriteLine("sss");
+
         }
 
+        //game attached run; use --module "**.bhm"   will call when Blish BeginRun()
         protected override async Task LoadAsync()
         {
-            
+            this.FishService = new FishService();
+            this.PathService = new PathService();
+            Console.WriteLine("sss");
         }
+  
 
-        protected override void OnModuleLoaded(EventArgs e)
-        {
-
-            // Base handler must be called
-            base.OnModuleLoaded(e);
-        }
 
         protected override void Update(GameTime gameTime)
         {
-            var b = GameService.GameIntegration.Gw2Instance.Gw2Process.Handle;
-            var a = GameService.Gw2Mumble.PlayerCharacter.Forward.Y;
+            //var b = GameService.GameIntegration.Gw2Instance.Gw2Process.Handle;
+           // var a = GameService.Gw2Mumble.PlayerCharacter.Forward.Y;
             //"Gw2-64.exe"+027A2D38
-            MemUtil.WriteMem(b,);
+            //MemUtil.WriteMem(b,);
         }
 
         /// <inheritdoc />
