@@ -16,8 +16,8 @@ namespace BhModule.TrueFisher.Automatic
 {
     public enum MemAddrOffset
     {
-        PROGRESSION = 80,
-        STATE = 68,
+        PROGRESSION = 0x80,
+        STATE = 0x68,
         YellowBarWidth = 0x8C
     }
     public enum FishState
@@ -35,12 +35,7 @@ namespace BhModule.TrueFisher.Automatic
 
         public IntPtr MemoryAddress
         {
-            get
-            {
-                if (module.ProcessService.Address == IntPtr.Zero) return IntPtr.Zero;
-                long addr = MemUtil.ReadMem(module.ProcessService.Handle, IntPtr.Add(module.ProcessService.Address, ptrBaseOffset), 8, new List<int>() { 10, 20, 8, 8, 0, 108, 0 }).Parse<long>().value;
-                return new IntPtr(addr);
-            }
+            get; private set;
         }
 
         public bool Enabled { get; set; } = false;
@@ -70,6 +65,7 @@ namespace BhModule.TrueFisher.Automatic
         }
         internal void Update(GameTime gameTime)
         {
+            if (MemoryAddress == IntPtr.Zero) SetMemoryAddress();
             SetState();
             SetYellowBarWidth(null);
             SetProgression(null);
@@ -104,7 +100,14 @@ namespace BhModule.TrueFisher.Automatic
             YellowBarWidth = mem == null ? 0.0f : mem.value;
 
         }
+        private void SetMemoryAddress()
+        {
 
+            if (module.ProcessService.Address == IntPtr.Zero || module.ProcessService.Handle == IntPtr.Zero) return;
+            long addr = MemUtil.ReadMem(module.ProcessService.Handle, IntPtr.Add(module.ProcessService.Address, ptrBaseOffset), 8, new List<int>() {  0x10, 0x20, 0x8, 0x8, 0x0, 0x108 }).Parse<long>().value;
+            MemoryAddress = new IntPtr(addr);
+
+        }
         private void SetProgression(float? val)
         {
             if (val != null)
@@ -118,7 +121,7 @@ namespace BhModule.TrueFisher.Automatic
         }
         private void OnMapChanged(object sender, ValueEventArgs<int> e)
         {
-
+            SetMemoryAddress();
         }
         private Mem<T> ReadFishMem<T>(int offset)
         {

@@ -12,18 +12,13 @@ namespace BhModule.TrueFisher.Automatic
     {
         private Module module;
         public int ID { get => GameService.GameIntegration.Gw2Instance.Gw2Process.Id; }
-        public IntPtr Handle { get; private set; }
-        public IntPtr Address { get; private set; } = IntPtr.Zero;
+        public IntPtr Handle { get => MemUtil.AttachProcess(0x001F0FFF, false, GameService.GameIntegration.Gw2Instance.Gw2Process.Id); }
+        public IntPtr Address { get => GameService.GameIntegration.Gw2Instance.Gw2Process.MainModule.BaseAddress; }
         public ProcessService(Module module)
         {
             this.module = module;
-            SetFirstMemAddr();
 
         }
-        private void SetFirstMemAddr()
-        {
-            Handle = MemUtil.AttachProcess(0x001F0FFF, false, GameService.GameIntegration.Gw2Instance.Gw2Process.Id);
-            Address = GameService.GameIntegration.Gw2Instance.Gw2Process.MainModule.BaseAddress;
-        }
+
     }
 }
