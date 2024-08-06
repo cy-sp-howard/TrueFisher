@@ -8,7 +8,7 @@ namespace BhModule.TrueFisher.Utils
 {
     public class Mem<T>
     {
-        public uint address { get; set; }
+        public IntPtr address { get; set; }
         public T value { get; set; }
 
         public Mem<TT> Parse<TT>()

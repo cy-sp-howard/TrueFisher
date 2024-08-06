@@ -24,6 +24,7 @@ namespace BhModule.TrueFisher
         private static readonly Logger Logger = Logger.GetLogger<Module>();
          public FishService FishService { get; private set; }
          public PathService PathService  { get; private set; }
+        public ProcessService ProcessService { get; private set; }
 
         #region Service Managers
         internal SettingsManager SettingsManager => this.ModuleParameters.SettingsManager;
@@ -46,22 +47,10 @@ namespace BhModule.TrueFisher
         }
 
         // game attached run; use --module "**.bhm"   will call when Blish BeginRun()
-        public Mem<T> abc<T>()
-        {
-            var a= new Mem<byte[]>() { address = 0x11, value = [ 3, 2,4 ,7]};
-            if (typeof(T) == typeof(int))
-            {
-                var b = new Mem<int>() { address = a.address, value = BitConverter.ToInt32(a.value,0) };
-                return (Mem<T>)(object)b;
-            }
-            return (Mem<T>)(object)a;
-        }
+
         protected override void Initialize()
         {
 
-            int a = -2;
-
-            FishState b = (FishState)a;
             Trace.WriteLine("sss");
 
         }
@@ -69,7 +58,8 @@ namespace BhModule.TrueFisher
         //game attached run; use --module "**.bhm"   will call when Blish BeginRun()
         protected override async Task LoadAsync()
         {
-            this.FishService = new FishService();
+            this.ProcessService = new ProcessService(this);
+            this.FishService = new FishService(this);
             this.PathService = new PathService();
             Console.WriteLine("sss");
         }
@@ -78,6 +68,7 @@ namespace BhModule.TrueFisher
 
         protected override void Update(GameTime gameTime)
         {
+            this.FishService.Update(gameTime);
             //var b = GameService.GameIntegration.Gw2Instance.Gw2Process.Handle;
            // var a = GameService.Gw2Mumble.PlayerCharacter.Forward.Y;
             //"Gw2-64.exe"+027A2D38

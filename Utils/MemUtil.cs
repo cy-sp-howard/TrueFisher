@@ -10,6 +10,19 @@ namespace BhModule.TrueFisher.Utils
 {
     internal class MemUtil
     {
+        [StructLayout(LayoutKind.Sequential)]
+        public struct MEMORY_BASIC_INFORMATION
+        {
+            public IntPtr BaseAddress;
+            public IntPtr AllocationBase;
+            public uint AllocationProtect;
+            public uint RegionSize;
+            public uint State;
+            public uint Protect;
+            public uint Type;
+        }
+        [DllImport("kernel32.dll")]
+        static extern int VirtualQueryEx(IntPtr hProcess, IntPtr lpAddress, out MEMORY_BASIC_INFORMATION lpBuffer, uint dwLength);
         [DllImport("kernel32.dll")]
         static extern IntPtr OpenProcess(int dwDesiredAccess, bool bInheritHandle, int dwProcessId);
 
@@ -19,29 +32,38 @@ namespace BhModule.TrueFisher.Utils
         [DllImport("kernel32.dll")]
         static extern bool ReadProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, [Out] byte[] lpBuffer, int nSize, out IntPtr lpNumberOfBytesRead);
 
-        internal static void WriteMem(IntPtr hProcess, uint _addr, byte[] val)
+        internal static void WriteMem(IntPtr hProcess, IntPtr addr, byte[] val)
         {
             IntPtr bytesWrittenSize;
-            IntPtr addr = new(_addr);
             WriteProcessMemory(hProcess, addr, val, val.Length, out bytesWrittenSize);
 
         }
-        internal static Mem<byte[]> ReadMem(IntPtr hProcess, uint _addr, uint memSize, List<int> ptrOffsetList = null)
+        internal static MEMORY_BASIC_INFORMATION GetMemInfo(IntPtr hProcess, uint _addr)
         {
-            IntPtr addr = new(_addr);
-            uint bufferSize = ptrOffsetList.Count > 0 ? sizeof(int) : memSize;
+            MEMORY_BASIC_INFORMATION buffer;
+            var a = VirtualQueryEx(hProcess, IntPtr.Zero, out buffer, (uint)Marshal.SizeOf(typeof(MEMORY_BASIC_INFORMATION)));
+            return buffer;
+        }
+        internal static IntPtr AttachProcess(int dwDesiredAccess, bool bInheritHandle, int dwProcessId)
+        {
+            return OpenProcess(dwDesiredAccess, bInheritHandle, dwProcessId);
+        }
+        internal static Mem<byte[]> ReadMem(IntPtr hProcess, IntPtr addr, uint memSize, List<int> ptrOffsetList = null)
+        {
+            uint bufferSize = (ptrOffsetList ?? new List<int>()).Count > 0 ? sizeof(long) : memSize;
             byte[] buffer = new byte[bufferSize];
             IntPtr bufferReadSize;
 
             ReadProcessMemory(hProcess, addr, buffer, buffer.Length, out bufferReadSize);
-            if (ptrOffsetList.Count == 0)
+            if (ptrOffsetList == null || ptrOffsetList.Count == 0 || bufferReadSize == IntPtr.Zero)
             {
-                return new Mem<byte[]>() { address = _addr, value = buffer };
+                return new Mem<byte[]>() { address = addr, value = buffer };
             }
 
             int offset = ptrOffsetList[0];
             ptrOffsetList.RemoveAt(0);
-            return ReadMem(hProcess, BitConverter.ToUInt32(buffer, 0) + (uint)offset, memSize, ptrOffsetList);
+            
+            return ReadMem(hProcess, IntPtr.Add(new IntPtr(BitConverter.ToInt64(buffer, 0)), offset), memSize, ptrOffsetList);
         }
 
     }
