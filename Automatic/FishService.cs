@@ -18,7 +18,10 @@ namespace BhModule.TrueFisher.Automatic
     {
         PROGRESSION = 0x80,
         STATE = 0x68,
-        YellowBarWidth = 0x8C
+        YellowBarWidth = 0x8C,
+        FISHPOS = 0x84, //float
+        USERPOS = 0x88,  //float
+        INRANGE = 0x90 //byte
     }
     public enum FishState
     {
