@@ -8,19 +8,20 @@ using System.Threading.Tasks;
 
 namespace BhModule.TrueFisher.Utils
 {
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MEMORY_BASIC_INFORMATION
+    {
+        public IntPtr BaseAddress;
+        public IntPtr AllocationBase;
+        public uint AllocationProtect;
+        public uint RegionSize;
+        public uint State;
+        public uint Protect;
+        public uint Type;
+    }
     internal class MemUtil
     {
-        [StructLayout(LayoutKind.Sequential)]
-        public struct MEMORY_BASIC_INFORMATION
-        {
-            public IntPtr BaseAddress;
-            public IntPtr AllocationBase;
-            public uint AllocationProtect;
-            public uint RegionSize;
-            public uint State;
-            public uint Protect;
-            public uint Type;
-        }
         [DllImport("kernel32.dll")]
         static extern int VirtualQueryEx(IntPtr hProcess, IntPtr lpAddress, out MEMORY_BASIC_INFORMATION lpBuffer, uint dwLength);
         [DllImport("kernel32.dll")]

@@ -14,6 +14,7 @@ using BhModule.TrueFisher.Automatic;
 using SharpDX.Direct3D11;
 using System.Diagnostics;
 using System.Collections.Generic;
+using MonoGame.Extended.Timers;
 
 namespace BhModule.TrueFisher
 {
@@ -24,7 +25,8 @@ namespace BhModule.TrueFisher
         private static readonly Logger Logger = Logger.GetLogger<Module>();
          public FishService FishService { get; private set; }
          public PathService PathService  { get; private set; }
-        public ProcessService ProcessService { get; private set; }
+        public ProcessService ProcessService { get; private set;
+        public ControlService ControlService { get; private set; }
 
         #region Service Managers
         internal SettingsManager SettingsManager => this.ModuleParameters.SettingsManager;
@@ -61,6 +63,7 @@ namespace BhModule.TrueFisher
             this.ProcessService = new ProcessService(this);
             this.FishService = new FishService(this);
             this.PathService = new PathService();
+            this.ControlService = new ControlService(this);
             Console.WriteLine("sss");
         }
   
@@ -80,6 +83,7 @@ namespace BhModule.TrueFisher
         {
             // Unload here
 
+            this.FishService.Unload();
             // All static members must be manually unset
         }
 

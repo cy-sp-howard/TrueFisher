@@ -11,6 +11,7 @@ using Microsoft.Xna.Framework.Graphics.PackedVector;
 using Blish_HUD.Controls.Extern;
 using System.Diagnostics;
 using Microsoft.Xna.Framework.Input;
+using Blish_HUD.Input;
 
 namespace BhModule.TrueFisher.Automatic
 {
@@ -32,31 +33,33 @@ namespace BhModule.TrueFisher.Automatic
     }
     public class FishService
     {
-        const int ptrBaseOffset = 0x027A2D38;
+        private const int ptrBaseOffset = 0x027A2D38;
         private readonly List<int> ptrOffsetList = new List<int>() { 10, 20, 8, 8, 0, 108, 0 };
         private Module module;
+        public event EventHandler<EventUtil.ChangeEventArgs<int>> StateChanged;
 
         public IntPtr MemoryAddress
         {
             get; private set;
         }
 
-        public bool Enabled { get; set; } = false;
         public FishState State
         {
-            get; private set;
-
+            get => _state;
         }
+        private FishState _state = FishState.UNKNOWN;
+        private float _progression;
         public float Progression
         {
-            get; private set;
-
+            get => _progression; set { WriteFishMem((int)MemAddrOffset.PROGRESSION, BitConverter.GetBytes((int)value)); }
         }
+        private float _yellowBarWidth;
         public float YellowBarWidth
         {
-
-            get; private set;
-
+            get => _yellowBarWidth; private set
+            {
+                WriteFishMem((int)MemAddrOffset.YellowBarWidth, BitConverter.GetBytes((int)value));
+            }
         }
 
         public FishService(Module module)
@@ -66,65 +69,55 @@ namespace BhModule.TrueFisher.Automatic
 
 
         }
-        internal void Update(GameTime gameTime)
+        public void Update(GameTime gameTime)
         {
-            if (MemoryAddress == IntPtr.Zero) SetMemoryAddress();
-            SetState();
-            SetYellowBarWidth(null);
-            SetProgression(null);
-            Trace.WriteLine(State);
-            if (!Enabled) return;
-            if (State == FishState.READY)
-            {
-                useSkill1();
-                YellowBarWidth = (float)1.3;
-            }
+            if (MemoryAddress == IntPtr.Zero) UpdateMemoryAddress();
+            UpdateState();
+            UpdateYellowBarWidth();
+            UpdateProgression();
+        }
+        public void Unload()
+        {
+            GameService.Gw2Mumble.CurrentMap.MapChanged -= OnMapChanged;
         }
 
-        private void useSkill1()
-        {
-            // Blish_HUD.Controls.Intern.Keyboard.Press(TrueFisher.Settings.Key_Skill_1.Value, false);
-        }
-        private void SetState()
+
+        private void UpdateState()
         {
 
             Mem<byte> mem = ReadFishMem<byte>((int)MemAddrOffset.STATE);
-            State = mem == null ? FishState.UNKNOWN : (FishState)mem.value;
+            FishState state = mem == null ? FishState.UNKNOWN : (FishState)mem.value;
+            EventUtil.CheckAndHandleEvent(ref _state, state,(evt)=>);
+
 
 
         }
-        private void SetYellowBarWidth(float? val)
+        private void UpdateYellowBarWidth()
         {
-            if (val != null)
-            {
-                WriteFishMem((int)MemAddrOffset.YellowBarWidth, BitConverter.GetBytes((int)val));
-            }
+
             Mem<float> mem = ReadFishMem<float>((int)MemAddrOffset.YellowBarWidth);
-            YellowBarWidth = mem == null ? 0.0f : mem.value;
+            _yellowBarWidth = mem == null ? 0.0f : mem.value;
 
         }
-        private void SetMemoryAddress()
+        private void UpdateMemoryAddress()
         {
 
             if (module.ProcessService.Address == IntPtr.Zero || module.ProcessService.Handle == IntPtr.Zero) return;
-            long addr = MemUtil.ReadMem(module.ProcessService.Handle, IntPtr.Add(module.ProcessService.Address, ptrBaseOffset), 8, new List<int>() {  0x10, 0x20, 0x8, 0x8, 0x0, 0x108 }).Parse<long>().value;
+            long addr = MemUtil.ReadMem(module.ProcessService.Handle, IntPtr.Add(module.ProcessService.Address, ptrBaseOffset), 8, new List<int>() { 0x10, 0x20, 0x8, 0x8, 0x0, 0x108 }).Parse<long>().value;
             MemoryAddress = new IntPtr(addr);
 
         }
-        private void SetProgression(float? val)
+        private void UpdateProgression()
         {
-            if (val != null)
-            {
-                WriteFishMem((int)MemAddrOffset.PROGRESSION, BitConverter.GetBytes((int)val));
-            };
+
             Mem<float> mem = ReadFishMem<float>((int)MemAddrOffset.PROGRESSION);
 
-            Progression = mem == null ? 0.0f : mem.value;
+            _progression = mem == null ? 0.0f : mem.value;
 
         }
         private void OnMapChanged(object sender, ValueEventArgs<int> e)
         {
-            SetMemoryAddress();
+            UpdateMemoryAddress();
         }
         private Mem<T> ReadFishMem<T>(int offset)
         {
@@ -136,8 +129,8 @@ namespace BhModule.TrueFisher.Automatic
         }
         private void WriteFishMem(int offset, byte[] val)
         {
-            IntPtr addr = ReadFishMem<long>(offset).address;
-            MemUtil.WriteMem(module.ProcessService.Handle, addr, val);
+            MemUtil.WriteMem(module.ProcessService.Handle, IntPtr.Add(MemoryAddress, offset), val);
         }
+
     }
 }
