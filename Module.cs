@@ -23,9 +23,9 @@ namespace BhModule.TrueFisher
     {
 
         private static readonly Logger Logger = Logger.GetLogger<Module>();
-         public FishService FishService { get; private set; }
-         public PathService PathService  { get; private set; }
-        public ProcessService ProcessService { get; private set;
+        public FishService FishService { get; private set; }
+        public PathService PathService { get; private set; }
+        public ProcessService ProcessService { get; private set; }
         public ControlService ControlService { get; private set; }
 
         #region Service Managers
@@ -37,7 +37,8 @@ namespace BhModule.TrueFisher
         public ModuleSettings Settings { get; private set; }
 
         [ImportingConstructor]
-        public Module([Import("ModuleParameters")] ModuleParameters moduleParameters) : base(moduleParameters) {
+        public Module([Import("ModuleParameters")] ModuleParameters moduleParameters) : base(moduleParameters)
+        {
             Console.WriteLine("hellpw");
         }
 
@@ -66,14 +67,14 @@ namespace BhModule.TrueFisher
             this.ControlService = new ControlService(this);
             Console.WriteLine("sss");
         }
-  
+
 
 
         protected override void Update(GameTime gameTime)
         {
             this.FishService.Update(gameTime);
             //var b = GameService.GameIntegration.Gw2Instance.Gw2Process.Handle;
-           // var a = GameService.Gw2Mumble.PlayerCharacter.Forward.Y;
+            // var a = GameService.Gw2Mumble.PlayerCharacter.Forward.Y;
             //"Gw2-64.exe"+027A2D38
             //MemUtil.WriteMem(b,);
         }

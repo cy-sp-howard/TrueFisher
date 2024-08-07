@@ -36,7 +36,7 @@ namespace BhModule.TrueFisher.Automatic
         private const int ptrBaseOffset = 0x027A2D38;
         private readonly List<int> ptrOffsetList = new List<int>() { 10, 20, 8, 8, 0, 108, 0 };
         private Module module;
-        public event EventHandler<EventUtil.ChangeEventArgs<int>> StateChanged;
+        public event EventHandler<ChangeEventArgs<FishState>> StateChanged;
 
         public IntPtr MemoryAddress
         {
@@ -56,9 +56,10 @@ namespace BhModule.TrueFisher.Automatic
         private float _yellowBarWidth;
         public float YellowBarWidth
         {
-            get => _yellowBarWidth; private set
+            get => _yellowBarWidth;
+            set
             {
-                WriteFishMem((int)MemAddrOffset.YellowBarWidth, BitConverter.GetBytes((int)value));
+                WriteFishMem((int)MemAddrOffset.YellowBarWidth, BitConverter.GetBytes(value));
             }
         }
 
@@ -87,7 +88,7 @@ namespace BhModule.TrueFisher.Automatic
 
             Mem<byte> mem = ReadFishMem<byte>((int)MemAddrOffset.STATE);
             FishState state = mem == null ? FishState.UNKNOWN : (FishState)mem.value;
-            EventUtil.CheckAndHandleEvent(ref _state, state,(evt)=>);
+            EventUtil.CheckAndHandleEvent(ref _state, state, (evt) => StateChanged?.Invoke(this, evt));
 
 
 
