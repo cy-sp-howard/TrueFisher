@@ -62,6 +62,7 @@ namespace BhModule.TrueFisher.Automatic
                 WriteFishMem((int)MemAddrOffset.YellowBarWidth, BitConverter.GetBytes(value));
             }
         }
+        public Blish_HUD.Gw2Mumble.CurrentMap CurrentMap { get=>GameService.Gw2Mumble.CurrentMap; }
 
         public FishService(Module module)
         {
