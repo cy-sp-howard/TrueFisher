@@ -15,6 +15,7 @@ using SharpDX.Direct3D11;
 using System.Diagnostics;
 using System.Collections.Generic;
 using MonoGame.Extended.Timers;
+using System.Security.Cryptography;
 
 namespace BhModule.TrueFisher
 {
@@ -34,10 +35,12 @@ namespace BhModule.TrueFisher
         internal Gw2ApiManager Gw2ApiManager => this.ModuleParameters.Gw2ApiManager;
         #endregion
         public ModuleSettings Settings { get; private set; }
+        public ModuleParameters Parameters { get; private set; }
 
         [ImportingConstructor]
         public TrueFisherModule([Import("ModuleParameters")] ModuleParameters moduleParameters) : base(moduleParameters)
         {
+            Parameters = moduleParameters;
             Console.WriteLine("hellpw");
         }
 
@@ -71,6 +74,8 @@ namespace BhModule.TrueFisher
 
         protected override void Update(GameTime gameTime)
         {
+
+           var a =  Parameters.DirectoriesManager.GetFullDirectoryPath("markers");
             this.FishService.Update(gameTime);
             this.ControlService.Update(gameTime);
             //var b = GameService.GameIntegration.Gw2Instance.Gw2Process.Handle;
