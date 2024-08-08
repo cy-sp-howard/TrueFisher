@@ -21,7 +21,7 @@ namespace BhModule.TrueFisher.Automatic
     }
     public class ControlService
     {
-        private Module module;
+        private TrueFisherModule module;
         public bool Enable
         {
             get => _enable;
@@ -32,7 +32,8 @@ namespace BhModule.TrueFisher.Automatic
                 else Stop();
             }
         }
-        public bool EnsureFishSuccess { get => module.Settings.EnsureFishSuccess.Value; }
+        private bool _enable = false;
+        private Blish_HUD.Modules.Module pathingModule { get => GameService.Module.Modules.ToList().Find(i => i.ModuleInstance.Name == "Pathing")?.ModuleInstance; }
         public VirtualKeyShort Skill_1 { get; }
         public VirtualKeyShort MoveBack { get; }
         public VirtualKeyShort MoveForward { get; }
@@ -42,8 +43,9 @@ namespace BhModule.TrueFisher.Automatic
         public VirtualKeyShort CameraUp { get; }
         public VirtualKeyShort CameraLeft { get; }
         public VirtualKeyShort CameraRight { get; }
-        private bool _enable = false;
-        public ControlService(Module module)
+
+
+        public ControlService(TrueFisherModule module)
         {
             this.module = module;
             SetUILang();
@@ -82,7 +84,7 @@ namespace BhModule.TrueFisher.Automatic
         }
         private void OnFishProgressionChange(object sender, ChangeEventArgs<float> evt)
         {
-            if (!EnsureFishSuccess) return;
+            if (!module.Settings.EnsureFishSuccess.Value) return;
             if (evt.Current <= 0.1f) SetFishSucess();
         }
         public void Start()

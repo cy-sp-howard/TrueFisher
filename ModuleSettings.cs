@@ -14,11 +14,11 @@ namespace BhModule.TrueFisher
 {
     public class ModuleSettings
     {
-        private readonly Module module;
+        private readonly TrueFisherModule module;
         public SettingEntry<KeyBinding> EnableToggle { get; private set; }
         public SettingEntry<bool> EnsureFishSuccess { get; private set; }
         public SettingEntry<bool> ChineseUI { get; private set; }
-        public ModuleSettings(Module module, SettingCollection settings)
+        public ModuleSettings(TrueFisherModule module, SettingCollection settings)
         {
             this.module = module;
             InitFishSettings(settings);

@@ -28,7 +28,7 @@ namespace BhModule.TrueFisher.Automatic
     {
         private const int ptrBaseOffset = 0x027A2D38;
         private readonly List<int> ptrOffsetList = new List<int>() { 10, 20, 8, 8, 0, 108, 0 };
-        private Module module;
+        private TrueFisherModule module;
         public event EventHandler<ChangeEventArgs<FishState>> StateChanged;
         public event EventHandler<ChangeEventArgs<float>> ProgressionChanged;
 
@@ -51,7 +51,7 @@ namespace BhModule.TrueFisher.Automatic
         }
         public Blish_HUD.Gw2Mumble.CurrentMap CurrentMap { get => GameService.Gw2Mumble.CurrentMap; }
 
-        public FishService(Module module)
+        public FishService(TrueFisherModule module)
         {
             this.module = module;
             InitMemoryAddress();

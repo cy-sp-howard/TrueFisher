@@ -19,10 +19,10 @@ using MonoGame.Extended.Timers;
 namespace BhModule.TrueFisher
 {
     [Export(typeof(Blish_HUD.Modules.Module))]
-    public class Module : Blish_HUD.Modules.Module
+    public class TrueFisherModule : Blish_HUD.Modules.Module
     {
 
-        private static readonly Logger Logger = Logger.GetLogger<Module>();
+        private static readonly Logger Logger = Logger.GetLogger<TrueFisherModule>();
         public FishService FishService { get; private set; }
         public PathService PathService { get; private set; }
         public ControlService ControlService { get; private set; }
@@ -36,7 +36,7 @@ namespace BhModule.TrueFisher
         public ModuleSettings Settings { get; private set; }
 
         [ImportingConstructor]
-        public Module([Import("ModuleParameters")] ModuleParameters moduleParameters) : base(moduleParameters)
+        public TrueFisherModule([Import("ModuleParameters")] ModuleParameters moduleParameters) : base(moduleParameters)
         {
             Console.WriteLine("hellpw");
         }
@@ -72,6 +72,7 @@ namespace BhModule.TrueFisher
         protected override void Update(GameTime gameTime)
         {
             this.FishService.Update(gameTime);
+            this.ControlService.Update(gameTime);
             //var b = GameService.GameIntegration.Gw2Instance.Gw2Process.Handle;
             // var a = GameService.Gw2Mumble.PlayerCharacter.Forward.Y;
             //"Gw2-64.exe"+027A2D38

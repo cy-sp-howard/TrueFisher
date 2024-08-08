@@ -9,9 +9,9 @@ namespace BhModule.TrueFisher.Automatic
 {
     public class PathService
     {
-        private Module module;
+        private TrueFisherModule module;
         public Blish_HUD.Gw2Mumble.PlayerCharacter Character { get => GameService.Gw2Mumble.PlayerCharacter; }
-        public PathService(Module module)
+        public PathService(TrueFisherModule module)
         {
             this.module = module;
         }
