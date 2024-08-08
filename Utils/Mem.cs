@@ -6,6 +6,19 @@ using System.Threading.Tasks;
 
 namespace BhModule.TrueFisher.Utils
 {
+    static internal class FishMem
+    {
+        public const int Progression = 0x80;
+        public const int State = 0x68;
+        public const int YellowBarWidth = 0x8C;
+        public const int FisPos = 0x84; //float
+        public const int UserPos = 0x88;  //float
+        public const int InRange = 0x90; //byte
+    }
+    static internal class UIMem
+    {
+        public const int Language = 0x80;
+    }
     public class Mem<T>
     {
         public IntPtr address { get; set; }

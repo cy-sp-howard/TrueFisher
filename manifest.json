@@ -7,7 +7,8 @@
 
   "description": "Description of your module. Visit https://github.com/blish-hud/manifest.json/blob/master/manifest-v1.md for details about the manifest format.",
   "dependencies": {
-    "bh.blishhud": ">=1.0.0"
+    "bh.blishhud": ">=1.0.0",
+    "bh.community.pathing": ">=1.8.5"
   },
   "url": "https://github.com/user/TrueFisher",
   "contributors": [

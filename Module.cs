@@ -25,7 +25,6 @@ namespace BhModule.TrueFisher
         private static readonly Logger Logger = Logger.GetLogger<Module>();
         public FishService FishService { get; private set; }
         public PathService PathService { get; private set; }
-        public ProcessService ProcessService { get; private set; }
         public ControlService ControlService { get; private set; }
 
         #region Service Managers
@@ -45,6 +44,7 @@ namespace BhModule.TrueFisher
         protected override void DefineSettings(SettingCollection settings)
         {
             this.Settings = new ModuleSettings(this, settings);
+  
 
 
         }
@@ -61,9 +61,8 @@ namespace BhModule.TrueFisher
         //game attached run; use --module "**.bhm"   will call when Blish BeginRun()
         protected override async Task LoadAsync()
         {
-            this.ProcessService = new ProcessService(this);
             this.FishService = new FishService(this);
-            this.PathService = new PathService();
+            this.PathService = new PathService(this);
             this.ControlService = new ControlService(this);
             Console.WriteLine("sss");
         }
@@ -84,7 +83,6 @@ namespace BhModule.TrueFisher
         {
             // Unload here
 
-            this.FishService.Unload();
             // All static members must be manually unset
         }
 

@@ -14,6 +14,11 @@ using System.Threading.Tasks;
 
 namespace BhModule.TrueFisher.Automatic
 {
+    public enum Lang
+    {
+        ENG = 1,
+        CN = 5
+    }
     public class ControlService
     {
         private Module module;
@@ -27,12 +32,23 @@ namespace BhModule.TrueFisher.Automatic
                 else Stop();
             }
         }
+        public bool EnsureFishSuccess { get => module.Settings.EnsureFishSuccess.Value; }
+        public VirtualKeyShort Skill_1 { get; }
+        public VirtualKeyShort MoveBack { get; }
+        public VirtualKeyShort MoveForward { get; }
+        public VirtualKeyShort MoveLeft { get; }
+        public VirtualKeyShort MoveRight { get; }
+        public VirtualKeyShort CameraDown { get; }
+        public VirtualKeyShort CameraUp { get; }
+        public VirtualKeyShort CameraLeft { get; }
+        public VirtualKeyShort CameraRight { get; }
         private bool _enable = false;
         public ControlService(Module module)
         {
             this.module = module;
-            Enable = true;
-            // 開始快速鍵
+            SetUILang();
+            GameService.GameIntegration.Gw2Instance.Gw2Started += (sender, args) => { SetUILang(); };
+
 
 
         }
@@ -54,22 +70,36 @@ namespace BhModule.TrueFisher.Automatic
         {
             Keyboard.Stroke(VirtualKeyShort.KEY_1);
             Thread.Sleep(50);
-            module.FishService.YellowBarWidth = 1.25f;
+            module.FishService.YellowBarWidth = 1.1f;
         }
-        private void OnStateChange(object sender, ChangeEventArgs<FishState> evt)
+        public void SetFishSucess()
+        {
+            module.FishService.Progression = 1f;
+        }
+        private void OnFishStateChange(object sender, ChangeEventArgs<FishState> evt)
         {
             if (evt.Current == FishState.READY) SetHook();
         }
+        private void OnFishProgressionChange(object sender, ChangeEventArgs<float> evt)
+        {
+            if (!EnsureFishSuccess) return;
+            if (evt.Current <= 0.1f) SetFishSucess();
+        }
         public void Start()
         {
-            module.FishService.StateChanged += OnStateChange;
+            module.FishService.StateChanged += OnFishStateChange;
+            module.FishService.ProgressionChanged += OnFishProgressionChange;
         }
         public void Stop()
         {
-
-            module.FishService.StateChanged -= OnStateChange;
+            module.FishService.StateChanged -= OnFishStateChange;
+            module.FishService.ProgressionChanged -= OnFishProgressionChange;
         }
-
+        public void SetUILang()
+        {
+            Lang val = module.Settings.ChineseUI.Value ? Lang.CN : Lang.ENG;
+            MemUtil.WriteMem(GameProcess.Handle, MemUtil.Gw2Ptr(UIMem.Language), BitConverter.GetBytes((int)val));
+        }
 
     }
 }

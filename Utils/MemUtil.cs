@@ -63,9 +63,12 @@ namespace BhModule.TrueFisher.Utils
 
             int offset = ptrOffsetList[0];
             ptrOffsetList.RemoveAt(0);
-            
+
             return ReadMem(hProcess, IntPtr.Add(new IntPtr(BitConverter.ToInt64(buffer, 0)), offset), memSize, ptrOffsetList);
         }
-
+        internal static IntPtr Gw2Ptr(int offset)
+        {
+            return IntPtr.Add(GameProcess.Address, offset);
+        }
     }
 }
