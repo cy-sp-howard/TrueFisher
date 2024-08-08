@@ -15,9 +15,10 @@ namespace BhModule.TrueFisher.Utils
         public const int UserPos = 0x88;  //float
         public const int InRange = 0x90; //byte
     }
-    static internal class UIMem
+    static internal class SettingMem
     {
         public const int Language = 0x80;
+        public const int Skill_1 = 0x222;
     }
     public class Mem<T>
     {
