@@ -26,6 +26,7 @@ namespace BhModule.TrueFisher
         private static readonly Logger Logger = Logger.GetLogger<TrueFisherModule>();
         public FishService FishService { get; private set; }
         public PathService PathService { get; private set; }
+        public DrawService DrawService { get; private set; }
         public ControlService ControlService { get; private set; }
 
         #region Service Managers
@@ -47,7 +48,7 @@ namespace BhModule.TrueFisher
         protected override void DefineSettings(SettingCollection settings)
         {
             this.Settings = new ModuleSettings(this, settings);
-  
+
 
 
         }
@@ -66,6 +67,7 @@ namespace BhModule.TrueFisher
         {
             this.FishService = new FishService(this);
             this.PathService = new PathService(this);
+            this.DrawService = new DrawService(this);
             this.ControlService = new ControlService(this);
             Console.WriteLine("sss");
         }
@@ -75,9 +77,10 @@ namespace BhModule.TrueFisher
         protected override void Update(GameTime gameTime)
         {
 
-           var a =  Parameters.DirectoriesManager.GetFullDirectoryPath("markers");
+            var a = Parameters.DirectoriesManager.GetFullDirectoryPath("markers");
             this.FishService.Update(gameTime);
             this.ControlService.Update(gameTime);
+            this.DrawService.Update(gameTime);
             //var b = GameService.GameIntegration.Gw2Instance.Gw2Process.Handle;
             // var a = GameService.Gw2Mumble.PlayerCharacter.Forward.Y;
             //"Gw2-64.exe"+027A2D38

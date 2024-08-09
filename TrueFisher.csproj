@@ -33,6 +33,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Automatic\ControlService.cs" />
+    <Compile Include="Automatic\DrawService.cs" />
     <Compile Include="Automatic\FishService.cs" />
     <Compile Include="Automatic\PathService.cs" />
     <Compile Include="Utils\GameProcess.cs" />
@@ -84,6 +85,9 @@
     </PackageReference>
     <PackageReference Include="Gw2Sharp">
       <Version>1.7.4</Version>
+    </PackageReference>
+    <PackageReference Include="TmfLib">
+      <Version>2.2.3</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup />
