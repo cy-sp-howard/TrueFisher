@@ -40,10 +40,8 @@ namespace BhModule.TrueFisher.Automatic
         public VirtualKeyShort MoveForward { get; }
         public VirtualKeyShort MoveLeft { get; }
         public VirtualKeyShort MoveRight { get; }
-        public VirtualKeyShort CameraDown { get; }
-        public VirtualKeyShort CameraUp { get; }
-        public VirtualKeyShort CameraLeft { get; }
-        public VirtualKeyShort CameraRight { get; }
+        public VirtualKeyShort FaceLeft { get; }
+        public VirtualKeyShort FaceRight { get; }
 
 
         public ControlService(TrueFisherModule module)

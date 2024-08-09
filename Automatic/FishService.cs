@@ -32,18 +32,20 @@ namespace BhModule.TrueFisher.Automatic
 
         public FishState State { get => _state; }
         private FishState _state = FishState.UNKNOWN;
-        private float _progression;
+
         public float Progression
         {
             get => _progression;
             set { GameProcess.Write(FishMem.Progression, BitConverter.GetBytes(value)); }
         }
-        private float _yellowBarWidth;
+        private float _progression;
+
         public float YellowBarWidth
         {
             get => _yellowBarWidth;
             set { GameProcess.Write(FishMem.YellowBarWidth, BitConverter.GetBytes(value)); }
         }
+        private float _yellowBarWidth;
         public Blish_HUD.Gw2Mumble.CurrentMap CurrentMap { get => GameService.Gw2Mumble.CurrentMap; }
 
         public FishService(TrueFisherModule module)
