@@ -8,50 +8,68 @@ using System.Threading.Tasks;
 
 namespace BhModule.TrueFisher.Utils
 {
-
-    [StructLayout(LayoutKind.Sequential)]
-    public struct MEMORY_BASIC_INFORMATION
+    public class Mem<T>
     {
-        public IntPtr BaseAddress;
-        public IntPtr AllocationBase;
-        public uint AllocationProtect;
-        public uint RegionSize;
-        public uint State;
-        public uint Protect;
-        public uint Type;
+        public IntPtr address { get; set; }
+        public T value { get; set; }
+
+        public Mem<TT> Parse<TT>()
+        {
+            if (typeof(T) != typeof(byte[])) throw new NotImplementedException("Value not byte[]");
+            byte[] val = (byte[])(object)value;
+            if (typeof(TT) == typeof(long))
+            {
+                return (Mem<TT>)(object)new Mem<long>() { address = address, value = BitConverter.ToInt64(val, 0) };
+            }
+            else if (typeof(TT) == typeof(int))
+            {
+                return (Mem<TT>)(object)new Mem<int>() { address = address, value = BitConverter.ToInt32(val, 0) };
+
+            }
+            else if (typeof(TT) == typeof(float))
+            {
+                return (Mem<TT>)(object)new Mem<float>() { address = address, value = BitConverter.ToSingle(val, 0) };
+            }
+            else if (typeof(TT) == typeof(Int16))
+            {
+                return (Mem<TT>)(object)new Mem<Int16>() { address = address, value = BitConverter.ToInt16(val, 0) };
+            }
+            else if (typeof(TT) == typeof(byte))
+            {
+                return (Mem<TT>)(object)new Mem<byte>() { address = address, value = val[0] };
+            }
+            throw new NotImplementedException("Not match type");
+        }
     }
     internal class MemUtil
     {
         [DllImport("kernel32.dll")]
-        static extern int VirtualQueryEx(IntPtr hProcess, IntPtr lpAddress, out MEMORY_BASIC_INFORMATION lpBuffer, uint dwLength);
-        [DllImport("kernel32.dll")]
         static extern IntPtr OpenProcess(int dwDesiredAccess, bool bInheritHandle, int dwProcessId);
 
         [DllImport("kernel32.dll")]
-        static extern bool WriteProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, byte[] lpBuffer, int nSize, out IntPtr lpNumberOfBytesWritten);
+        static extern bool WriteProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, byte[] lpBuffer, int nSize, out int lpNumberOfBytesWritten);
 
         [DllImport("kernel32.dll")]
         static extern bool ReadProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, [Out] byte[] lpBuffer, int nSize, out IntPtr lpNumberOfBytesRead);
 
-        internal static void WriteMem(IntPtr hProcess, IntPtr addr, byte[] val)
+        internal static int WriteMem(IntPtr hProcess, IntPtr addr, byte[] val, IReadOnlyList<int> ptrOffsetList = null)
         {
-            IntPtr bytesWrittenSize;
-            WriteProcessMemory(hProcess, addr, val, val.Length, out bytesWrittenSize);
-
-        }
-        internal static MEMORY_BASIC_INFORMATION GetMemInfo(IntPtr hProcess, uint _addr)
-        {
-            MEMORY_BASIC_INFORMATION buffer;
-            var a = VirtualQueryEx(hProcess, IntPtr.Zero, out buffer, (uint)Marshal.SizeOf(typeof(MEMORY_BASIC_INFORMATION)));
-            return buffer;
+            IntPtr targetAddr = addr;
+            if (ptrOffsetList != null)
+            {
+                targetAddr = ReadMem(hProcess, addr, val.Length, ptrOffsetList).address;
+            }
+            int bytesWrittenSize;
+            WriteProcessMemory(hProcess, targetAddr, val, val.Length, out bytesWrittenSize);
+            return bytesWrittenSize;
         }
         internal static IntPtr AttachProcess(int dwDesiredAccess, bool bInheritHandle, int dwProcessId)
         {
             return OpenProcess(dwDesiredAccess, bInheritHandle, dwProcessId);
         }
-        internal static Mem<byte[]> ReadMem(IntPtr hProcess, IntPtr addr, uint memSize, List<int> ptrOffsetList = null)
+        internal static Mem<byte[]> ReadMem(IntPtr hProcess, IntPtr addr, int memSize, IReadOnlyList<int> ptrOffsetList = null)
         {
-            uint bufferSize = (ptrOffsetList ?? new List<int>()).Count > 0 ? sizeof(long) : memSize;
+            int bufferSize = (ptrOffsetList ?? new List<int>()).Count > 0 ? sizeof(long) : memSize;
             byte[] buffer = new byte[bufferSize];
             IntPtr bufferReadSize;
 
@@ -62,13 +80,10 @@ namespace BhModule.TrueFisher.Utils
             }
 
             int offset = ptrOffsetList[0];
-            ptrOffsetList.RemoveAt(0);
+            List<int> _ptrOffsetListt = ptrOffsetList.ToList();
+            _ptrOffsetListt.RemoveAt(0);
 
-            return ReadMem(hProcess, IntPtr.Add(new IntPtr(BitConverter.ToInt64(buffer, 0)), offset), memSize, ptrOffsetList);
-        }
-        internal static IntPtr Gw2Ptr(int offset)
-        {
-            return IntPtr.Add(GameProcess.Address, offset);
+            return ReadMem(hProcess, IntPtr.Add(new IntPtr(BitConverter.ToInt64(buffer, 0)), offset), memSize, _ptrOffsetListt);
         }
     }
 }

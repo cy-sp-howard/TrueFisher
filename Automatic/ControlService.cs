@@ -35,7 +35,7 @@ namespace BhModule.TrueFisher.Automatic
         }
         private bool _enable = false;
         private Blish_HUD.Modules.Module pathingModule { get => GameService.Module.Modules.ToList().Find(i => i.ModuleInstance.Name == "Pathing")?.ModuleInstance; }
-        public VirtualKeyShort Skill_1 { get=>GetGameBindButton(SettingMem.Skill_1); }
+        public VirtualKeyShort Skill_1 { get => GetGameBindButton(SettingMem.Skill_1); }
         public VirtualKeyShort MoveBack { get; }
         public VirtualKeyShort MoveForward { get; }
         public VirtualKeyShort MoveLeft { get; }
@@ -101,11 +101,11 @@ namespace BhModule.TrueFisher.Automatic
         public void SetUILang()
         {
             Lang val = module.Settings.ChineseUI.Value ? Lang.CN : Lang.ENG;
-            MemUtil.WriteMem(GameProcess.Handle, MemUtil.Gw2Ptr(SettingMem.Language), BitConverter.GetBytes((int)val));
+            GameProcess.Write(SettingMem.Language, BitConverter.GetBytes((int)val));
         }
-        public VirtualKeyShort GetGameBindButton(int offset)
+        public VirtualKeyShort GetGameBindButton(MemTrail offset)
         {
-            return (VirtualKeyShort)MemUtil.ReadMem(GameProcess.Handle, MemUtil.Gw2Ptr(0x26EFE28), 2, new List<int>() { offset * 0x8 + 0x8, 0x34 }).Parse<Int16>().value;
+            return (VirtualKeyShort)GameProcess.Read<short>(offset).value;
         }
 
     }
