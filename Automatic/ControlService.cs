@@ -15,9 +15,10 @@ using System.Threading.Tasks;
 
 namespace BhModule.TrueFisher.Automatic
 {
-    public enum Lang
+    public enum Lang : int
     {
-        ENG = 1,
+        UNKNOWN = -1,
+        ENG = 0,
         CN = 5
     }
     public class ControlService
@@ -34,6 +35,7 @@ namespace BhModule.TrueFisher.Automatic
             }
         }
         private bool _enable = false;
+
         private Blish_HUD.Modules.Module pathingModule { get => GameService.Module.Modules.ToList().Find(i => i.ModuleInstance.Name == "Pathing")?.ModuleInstance; }
         public VirtualKeyShort Skill_1 { get => GetGameBindButton(SettingMem.Skill_1); }
         public VirtualKeyShort MoveBack { get; }
@@ -42,6 +44,8 @@ namespace BhModule.TrueFisher.Automatic
         public VirtualKeyShort MoveRight { get; }
         public VirtualKeyShort FaceLeft { get; }
         public VirtualKeyShort FaceRight { get; }
+
+        private Lang originUILanguage = Lang.UNKNOWN;
 
 
         public ControlService(TrueFisherModule module)
@@ -98,7 +102,11 @@ namespace BhModule.TrueFisher.Automatic
         }
         public void SetUILang()
         {
-            Lang val = module.Settings.ChineseUI.Value ? Lang.CN : Lang.ENG;
+            if (originUILanguage == Lang.UNKNOWN)
+            {
+                originUILanguage = (Lang)GameProcess.Read<int>(SettingMem.Language).value;
+            }
+            Lang val = module.Settings.ChineseUI.Value ? Lang.CN : originUILanguage;
             GameProcess.Write(SettingMem.Language, BitConverter.GetBytes((int)val));
         }
         public VirtualKeyShort GetGameBindButton(MemTrail offset)

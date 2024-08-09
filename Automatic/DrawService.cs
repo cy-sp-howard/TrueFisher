@@ -53,7 +53,7 @@ namespace BhModule.TrueFisher.Automatic
         }
         public void Update(GameTime gameTime)
         {
-            Trace.WriteLine("22");
+        
 
 
 

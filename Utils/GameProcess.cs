@@ -41,7 +41,7 @@ namespace BhModule.TrueFisher.Utils
     }
     public static class SettingMem
     {
-        public static readonly MemTrail Language = new(0x80);
+        public static readonly MemTrail Language = new(0x26EDB00, [0x38,0x50,0x334]);
         private static MemTrail KeyBindTemplate(int val) => new(0x26EFE28, [val * 0x8 + 0x8, 0x34]);
         public static readonly MemTrail Skill_1 = KeyBindTemplate(0x222);
     }

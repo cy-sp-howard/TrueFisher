@@ -42,7 +42,6 @@ namespace BhModule.TrueFisher
         public TrueFisherModule([Import("ModuleParameters")] ModuleParameters moduleParameters) : base(moduleParameters)
         {
             Parameters = moduleParameters;
-            Console.WriteLine("hellpw");
         }
 
         protected override void DefineSettings(SettingCollection settings)
@@ -58,7 +57,6 @@ namespace BhModule.TrueFisher
         protected override void Initialize()
         {
 
-            Trace.WriteLine("sss");
 
         }
 
@@ -67,9 +65,9 @@ namespace BhModule.TrueFisher
         {
             this.FishService = new FishService(this);
             this.PathService = new PathService(this);
-            this.DrawService = new DrawService(this);
+            //this.DrawService = new DrawService(this);
             this.ControlService = new ControlService(this);
-            Console.WriteLine("sss");
+         
         }
 
 
@@ -80,7 +78,7 @@ namespace BhModule.TrueFisher
             var a = Parameters.DirectoriesManager.GetFullDirectoryPath("markers");
             this.FishService.Update(gameTime);
             this.ControlService.Update(gameTime);
-            this.DrawService.Update(gameTime);
+            //this.DrawService.Update(gameTime);
             //var b = GameService.GameIntegration.Gw2Instance.Gw2Process.Handle;
             // var a = GameService.Gw2Mumble.PlayerCharacter.Forward.Y;
             //"Gw2-64.exe"+027A2D38
