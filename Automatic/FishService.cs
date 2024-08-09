@@ -61,7 +61,10 @@ namespace BhModule.TrueFisher.Automatic
         private void UpdateState()
         {
             Mem<byte> mem = GameProcess.Read<byte>(FishMem.State);
-            FishState state = mem == null ? FishState.UNKNOWN : (FishState)mem.value;
+            FishState state = (FishState)mem.value;
+            if (GameProcess.Read<int>(FishMem.Fishing).value == 0) {
+                state = FishState.UNKNOWN;
+            }
             EventUtil.CheckAndHandleEvent(ref _state, state, (evt) => StateChanged?.Invoke(this, evt));
         }
         private void UpdateYellowBarWidth()

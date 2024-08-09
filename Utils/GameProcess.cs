@@ -33,6 +33,7 @@ namespace BhModule.TrueFisher.Utils
     {
         public static readonly MemTrail BaseMemAddr = new(0x027A2D38, [0x10, 0x20, 0x8, 0x8, 0x0, 0x108]);
         public static readonly MemTrail State = BaseMemAddr.AddOffset(0x68);
+        public static readonly MemTrail Fishing = BaseMemAddr.AddOffset(0x1A0);
         public static readonly MemTrail Progression = BaseMemAddr.AddOffset(0x80);
         public static readonly MemTrail FisPos = BaseMemAddr.AddOffset(0x84);
         public static readonly MemTrail YellowBarWidth = BaseMemAddr.AddOffset(0x8C);
@@ -41,25 +42,30 @@ namespace BhModule.TrueFisher.Utils
     }
     public static class SettingMem
     {
-        public static readonly MemTrail Language = new(0x26EDB00, [0x38,0x50,0x334]);
+        public static readonly MemTrail Language = new(0x26EDB00, [0x38, 0x50, 0x334]);
         private static MemTrail KeyBindTemplate(int val) => new(0x26EFE28, [val * 0x8 + 0x8, 0x34]);
+        public static int SecondKeyOffset = 0x50;
         public static readonly MemTrail Skill_1 = KeyBindTemplate(0x222);
+        public static readonly MemTrail TurnLeft = KeyBindTemplate(0x555);
+        public static readonly MemTrail TurnRight = KeyBindTemplate(0x1CE);
+        public static readonly MemTrail MoveForward = KeyBindTemplate(0x49B);
+        public static readonly MemTrail MoveBackward = KeyBindTemplate(0x5A0);
     }
 
     public class MemTrail
     {
-        public IntPtr StartAddress { get => IntPtr.Add(GameProcess.Address, firstOffset); }
+        public IntPtr StartAddress { get => IntPtr.Add(GameProcess.Address, FirstOffset); }
         public IReadOnlyList<int> Offset { get => _offset.AsReadOnly(); }
-        private int firstOffset;
+        public int FirstOffset { get; private set; }
         private List<int> _offset = new();
         public MemTrail(int firstOffset, int[] offset)
         {
-            this.firstOffset = firstOffset;
+            this.FirstOffset = firstOffset;
             _offset.AddRange(offset);
         }
         public MemTrail(int firstOffset)
         {
-            this.firstOffset = firstOffset;
+            this.FirstOffset = firstOffset;
         }
         public MemTrail AddOffset(int val)
         {
@@ -69,7 +75,7 @@ namespace BhModule.TrueFisher.Utils
         {
             List<int> n_offset = _offset.ToList();
             n_offset.AddRange(vals);
-            return new(firstOffset, n_offset.ToArray());
+            return new(FirstOffset, n_offset.ToArray());
         }
     }
 }

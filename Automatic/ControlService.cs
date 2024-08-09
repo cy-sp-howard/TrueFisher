@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 
 namespace BhModule.TrueFisher.Automatic
 {
+
     public enum Lang : int
     {
         UNKNOWN = -1,
@@ -23,6 +24,7 @@ namespace BhModule.TrueFisher.Automatic
     }
     public class ControlService
     {
+
         private TrueFisherModule module;
         public bool Enable
         {
@@ -38,12 +40,14 @@ namespace BhModule.TrueFisher.Automatic
 
         private Blish_HUD.Modules.Module pathingModule { get => GameService.Module.Modules.ToList().Find(i => i.ModuleInstance.Name == "Pathing")?.ModuleInstance; }
         public VirtualKeyShort Skill_1 { get => GetGameBindButton(SettingMem.Skill_1); }
-        public VirtualKeyShort MoveBack { get; }
-        public VirtualKeyShort MoveForward { get; }
-        public VirtualKeyShort MoveLeft { get; }
-        public VirtualKeyShort MoveRight { get; }
-        public VirtualKeyShort FaceLeft { get; }
-        public VirtualKeyShort FaceRight { get; }
+        public VirtualKeyShort MoveForward { get => GetGameBindButton(SettingMem.MoveForward); }
+        public VirtualKeyShort MoveBackward { get => GetGameBindButton(SettingMem.MoveBackward); }
+        public VirtualKeyShort TurnLeft { get => GetGameBindButton(SettingMem.TurnLeft); }
+        public VirtualKeyShort TurnRight { get => GetGameBindButton(SettingMem.TurnRight); }
+        static public Dictionary<VirtualKeyShort, VirtualKeyShort> GameKeyMap = new() {
+            {VirtualKeyShort.ACCEPT,VirtualKeyShort.RIGHT },
+            {VirtualKeyShort.NONCONVERT,VirtualKeyShort.LEFT },
+        };
 
         private Lang originUILanguage = Lang.UNKNOWN;
 
@@ -75,11 +79,11 @@ namespace BhModule.TrueFisher.Automatic
         {
             Keyboard.Stroke(Skill_1);
             Thread.Sleep(50);
-            module.FishService.YellowBarWidth = 1.1f;
+            module.FishService.YellowBarWidth = module.Settings.FishYellowBarWidth.Value;
         }
         public void SetFishSucess()
         {
-            module.FishService.Progression = 1f;
+            module.FishService.Progression = 1.1f;
         }
         private void OnFishStateChange(object sender, ChangeEventArgs<FishState> evt)
         {
@@ -109,9 +113,25 @@ namespace BhModule.TrueFisher.Automatic
             Lang val = module.Settings.ChineseUI.Value ? Lang.CN : originUILanguage;
             GameProcess.Write(SettingMem.Language, BitConverter.GetBytes((int)val));
         }
+        public VirtualKeyShort GameKeyToVirtualKey(VirtualKeyShort key)
+        {
+            if (GameKeyMap.ContainsKey(key))
+            {
+                return GameKeyMap[key];
+            }
+            return key;
+        }
         public VirtualKeyShort GetGameBindButton(MemTrail offset)
         {
-            return (VirtualKeyShort)GameProcess.Read<short>(offset).value;
+            Mem<short> result = GameProcess.Read<short>(offset);
+            if (result.value == 0)
+            {
+                int[] secondKeyOffsetAry = offset.Offset.ToArray();
+                secondKeyOffsetAry[secondKeyOffsetAry.Length - 1] = secondKeyOffsetAry[secondKeyOffsetAry.Length - 1] + SettingMem.SecondKeyOffset;
+                MemTrail secondKeyTrail = new(offset.FirstOffset, secondKeyOffsetAry);
+                return GameKeyToVirtualKey((VirtualKeyShort)GameProcess.Read<short>(secondKeyTrail).value);
+            }
+            return GameKeyToVirtualKey((VirtualKeyShort)result.value);
         }
 
     }

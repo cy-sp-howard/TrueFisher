@@ -43,6 +43,7 @@
     <Compile Include="Utils\EventUtil.cs" />
     <Compile Include="Utils\MapUtil.cs" />
     <Compile Include="Utils\MemUtil.cs" />
+    <Compile Include="Utils\WindowUtil.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="manifest.json" />
