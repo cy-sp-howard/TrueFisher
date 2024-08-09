@@ -63,11 +63,9 @@ namespace BhModule.TrueFisher.Utils
         }
         public MemTrail AddOffset(int val)
         {
-            List<int> n_offset = _offset.ToList();
-            n_offset.Add(val);
-            return new(firstOffset, n_offset.ToArray());
+            return AddOffset([val]);
         }
-        public MemTrail Add(int[] vals)
+        public MemTrail AddOffset(int[] vals)
         {
             List<int> n_offset = _offset.ToList();
             n_offset.AddRange(vals);
