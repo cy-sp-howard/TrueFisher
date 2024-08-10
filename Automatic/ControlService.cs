@@ -109,6 +109,7 @@ namespace BhModule.TrueFisher.Automatic
             if (originUILanguage == Lang.UNKNOWN)
             {
                 originUILanguage = (Lang)GameProcess.Read<int>(SettingMem.Language).value;
+                if (originUILanguage == Lang.CN) originUILanguage = Lang.ENG;
             }
             Lang val = module.Settings.ChineseUI.Value ? Lang.CN : originUILanguage;
             GameProcess.Write(SettingMem.Language, BitConverter.GetBytes((int)val));

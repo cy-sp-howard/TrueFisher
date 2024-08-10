@@ -13,22 +13,41 @@ namespace BhModule.TrueFisher.Utils
 {
     public static class WindowUtil
     {
-        public static Notify Notify_ = new Notify() { Parent = GameService.Graphics.SpriteScreen, };
-        public class Notify : Control
+        public static NotifyClass Notify = new NotifyClass();
+        public class NotifyClass : Control
         {
-            public bool showHint = false;
-            public Notify()
+            private const float duration = 3000;
+            private string message;
+            private DateTime msgStartTime = DateTime.Now;
+            public NotifyClass()
             {
-                Trace.WriteLine("ss");
+                Parent = GameService.Graphics.SpriteScreen;
+                Size = new Point(Parent.Size.X, 50);
+                Location = new Point(0, Parent.Size.Y / 10 * 2);
+
             }
             protected override void Paint(SpriteBatch spriteBatch, Rectangle bounds)
             {
-                Viewport viewport = spriteBatch.GraphicsDevice.Viewport;
-                Vector3 screenPosition = viewport.Project(new Vector3(WorldUtil.GameToWorldCoord(GameService.Gw2Mumble.PlayerCharacter.Position.X), WorldUtil.GameToWorldCoord(GameService.Gw2Mumble.PlayerCharacter.Position.Y), WorldUtil.GameToWorldCoord(GameService.Gw2Mumble.PlayerCharacter.Position.Z)), GameService.Gw2Mumble.PlayerCamera.Projection, GameService.Gw2Mumble.PlayerCamera.View, GameService.Gw2Mumble.PlayerCamera.PlayerView);
-                Vector2 spritePosition = new Vector2(screenPosition.X, screenPosition.Y);
+                if (message == null) return;
+                double existTime = (DateTime.Now - msgStartTime).TotalMilliseconds;
+                float opacity = (duration - (float)existTime) / duration;
+                if (opacity < 0)
+                {
+                    Clear();
+                    return;
+                }
+                Color textColor = Color.Yellow * opacity;
+                spriteBatch.DrawStringOnCtrl(this, message, GameService.Content.DefaultFont32, new Rectangle(0, 0, Width, Height), textColor, false, false, 1, HorizontalAlignment.Center, VerticalAlignment.Middle);
 
-                if (!showHint) return;
-                spriteBatch.DrawStringOnCtrl(this, "Hello!", GameService.Content.DefaultFont18, new Rectangle((int)screenPosition.X, (int)screenPosition.Y, 50, 40), Color.Magenta);
+            }
+            public void Clear()
+            {
+                message = null;
+            }
+            public void Show(string text)
+            {
+                msgStartTime = DateTime.Now;
+                message = text;
             }
         }
     }

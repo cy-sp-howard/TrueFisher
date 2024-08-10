@@ -65,7 +65,7 @@ namespace BhModule.TrueFisher
         {
             this.FishService = new FishService(this);
             this.PathService = new PathService(this);
-            //this.DrawService = new DrawService(this);
+            this.DrawService = new DrawService(this);
             this.ControlService = new ControlService(this);
          
         }
@@ -78,7 +78,7 @@ namespace BhModule.TrueFisher
             var a = Parameters.DirectoriesManager.GetFullDirectoryPath("markers");
             this.FishService.Update(gameTime);
             this.ControlService.Update(gameTime);
-            //this.DrawService.Update(gameTime);
+            this.DrawService.Update(gameTime);
             //var b = GameService.GameIntegration.Gw2Instance.Gw2Process.Handle;
             // var a = GameService.Gw2Mumble.PlayerCharacter.Forward.Y;
             //"Gw2-64.exe"+027A2D38

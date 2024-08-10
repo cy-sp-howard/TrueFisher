@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Blish_HUD;
 using System.IO;
 using System.Diagnostics;
+using Blish_HUD.Controls;
 
 namespace BhModule.TrueFisher.Automatic
 {
@@ -21,15 +22,13 @@ namespace BhModule.TrueFisher.Automatic
         public DrawService(TrueFisherModule module)
         {
             this.module = module;
-     
 
-
-        }
+    }
         public void Update(GameTime gameTime)
         {
-        
 
 
+            Trace.WriteLine('a');
 
         }
         public void Unload()

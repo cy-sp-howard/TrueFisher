@@ -15,8 +15,7 @@ namespace BhModule.TrueFisher.Utils
     {
         static public Process Process { get => GameService.GameIntegration.Gw2Instance.Gw2Process; }
 
-        // 這必要嗎 可以用Process.Handle?
-        static public IntPtr Handle { get => Process == null ? IntPtr.Zero : MemUtil.AttachProcess(0x001F0FFF, false, Process.Id); }
+        static public IntPtr Handle { get => Process == null ? IntPtr.Zero : Process.Handle; }
         static public IntPtr Address { get => Process == null ? IntPtr.Zero : Process.MainModule.BaseAddress; }
         static public Mem<T> Read<T>(MemTrail trail)
         {

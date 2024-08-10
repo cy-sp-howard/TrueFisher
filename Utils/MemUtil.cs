@@ -63,10 +63,6 @@ namespace BhModule.TrueFisher.Utils
             WriteProcessMemory(hProcess, targetAddr, val, val.Length, out bytesWrittenSize);
             return bytesWrittenSize;
         }
-        internal static IntPtr AttachProcess(int dwDesiredAccess, bool bInheritHandle, int dwProcessId)
-        {
-            return OpenProcess(dwDesiredAccess, bInheritHandle, dwProcessId);
-        }
         internal static Mem<byte[]> ReadMem(IntPtr hProcess, IntPtr addr, int memSize, IReadOnlyList<int> ptrOffsetList = null)
         {
             int bufferSize = (ptrOffsetList ?? new List<int>()).Count > 0 ? sizeof(long) : memSize;
