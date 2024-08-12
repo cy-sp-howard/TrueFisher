@@ -47,7 +47,7 @@ namespace BhModule.TrueFisher.Automatic
         public VirtualKeyShort Interact { get => PathService.GetGameBindButton(SettingMem.Skill_1); }
         public VirtualKeyShort Anchor { get => PathService.GetGameBindButton(SettingMem.Skill_1); }
 
- 
+
 
         private Lang originUILanguage = Lang.UNKNOWN;
 
@@ -91,16 +91,17 @@ namespace BhModule.TrueFisher.Automatic
             Mouse.Release(MouseButton.LEFT, (int)(screenCenterX + moveX), (int)(screenCenterY + moveY));
 
         }
- 
+
         public void CastLine()
         {
             if (!module.FishService.HoleInRange) return;
-            Vector2 pos = module.FishService.HoleScreenPos;
-            if (pos.X < 0 || pos.Y < 0 || pos.X > GameService.Graphics.WindowWidth || pos.Y > GameService.Graphics.WindowHeight)
+            Vector3 holePos = module.FishService.NearestHole.Position;
+            Vector2 resolution = GameService.Graphics.Resolution.ToVector2();
+            if (holePos.X < 0 || holePos.Y < 0 || holePos.X > resolution.X || holePos.Y > resolution.Y)
             {
-                MoveTargetToScreenCenter(pos);
+                MoveTargetToScreenCenter(new (holePos.X,holePos.Y));
             }
-            Mouse.SetPosition(((int)pos.X), ((int)pos.Y));
+            Mouse.SetPosition(((int)holePos.X), ((int)holePos.Y));
             Keyboard.Stroke(Skill_1);
             Thread.Sleep(50);
         }
@@ -131,6 +132,7 @@ namespace BhModule.TrueFisher.Automatic
         }
         public void Start()
         {
+            CastLine();
             module.FishService.HoleNeard += OnHoldNeard;
             module.FishService.StateChanged += OnFishStateChange;
             module.FishService.ProgressionChanged += OnFishProgressionChange;
@@ -151,7 +153,7 @@ namespace BhModule.TrueFisher.Automatic
             Lang val = module.Settings.ChineseUI.Value ? Lang.CN : originUILanguage;
             GameProcess.Write(SettingMem.Language, BitConverter.GetBytes((int)val));
         }
-    
+
 
     }
 }
