@@ -26,7 +26,7 @@ namespace BhModule.TrueFisher.Automatic
         public DrawService(TrueFisherModule module)
         {
             this.module = module;
-            DrawPic(new Toarupic(new Vector3(GameService.Gw2Mumble.PlayerCharacter.Position.X, GameService.Gw2Mumble.PlayerCharacter.Position.Y, GameService.Gw2Mumble.PlayerCharacter.Position.Z)));
+            //DrawPic(new Toarupic(new Vector3(GameService.Gw2Mumble.PlayerCharacter.Position.X, GameService.Gw2Mumble.PlayerCharacter.Position.Y, GameService.Gw2Mumble.PlayerCharacter.Position.Z)));
         }
         public void Update(GameTime gameTime)
         {

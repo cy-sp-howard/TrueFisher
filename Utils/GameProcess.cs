@@ -45,6 +45,10 @@ namespace BhModule.TrueFisher.Utils
         private static MemTrail KeyBindTemplate(int val) => new(0x26EFE28, [val * 0x8 + 0x8, 0x34]);
         public static int SecondKeyOffset = 0x50;
         public static readonly MemTrail Skill_1 = KeyBindTemplate(0x222);
+        public static readonly MemTrail Skill_2 = KeyBindTemplate(0x372);
+        public static readonly MemTrail Skill_3 = KeyBindTemplate(0x438);
+        public static readonly MemTrail Interact = KeyBindTemplate(0x156);
+        public static readonly MemTrail Anchor = KeyBindTemplate(0x303);
         public static readonly MemTrail TurnLeft = KeyBindTemplate(0x555);
         public static readonly MemTrail TurnRight = KeyBindTemplate(0x1CE);
         public static readonly MemTrail MoveForward = KeyBindTemplate(0x49B);

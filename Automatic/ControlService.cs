@@ -3,7 +3,7 @@ using Blish_HUD;
 using Blish_HUD.Controls.Extern;
 using Blish_HUD.Controls.Intern;
 using Blish_HUD.Input;
-using Gw2Sharp.WebApi.V2.Models;
+using Gw2Sharp.Models;
 using Microsoft.Xna.Framework;
 using SharpDX.DirectWrite;
 using SharpDX.MediaFoundation;
@@ -43,14 +43,17 @@ namespace BhModule.TrueFisher.Automatic
 
         private Blish_HUD.Modules.Module pathingModule { get => GameService.Module.Modules.ToList().Find(i => i.ModuleInstance.Name == "Pathing")?.ModuleInstance; }
         public VirtualKeyShort Skill_1 { get => PathService.GetGameBindButton(SettingMem.Skill_1); }
-        public VirtualKeyShort Skill_3 { get => PathService.GetGameBindButton(SettingMem.Skill_1); }
-        public VirtualKeyShort Interact { get => PathService.GetGameBindButton(SettingMem.Skill_1); }
-        public VirtualKeyShort Anchor { get => PathService.GetGameBindButton(SettingMem.Skill_1); }
+        public VirtualKeyShort Skill_3 { get => PathService.GetGameBindButton(SettingMem.Skill_3); }
+        public VirtualKeyShort Interact { get => PathService.GetGameBindButton(SettingMem.Interact); }
+        public VirtualKeyShort Anchor { get => PathService.GetGameBindButton(SettingMem.Anchor); }
 
 
 
         private Lang originUILanguage = Lang.UNKNOWN;
-
+        private bool IsMSkiffounted
+        {
+            get => GameService.Gw2Mumble.PlayerCharacter.CurrentMount == MountType.Skiff;
+        }
         private Vector3 playerPos
         {
             get => GameService.Gw2Mumble.PlayerCharacter.Position;
@@ -73,6 +76,13 @@ namespace BhModule.TrueFisher.Automatic
         }
         public void Update(GameTime gameTime)
         {
+            var a = GameService.Gw2Mumble;
+            var _b = playerPos.X;
+            var _c = playerPos.Y;
+
+            var b = BitConverter.GetBytes(playerPos.X);
+            var c = BitConverter.GetBytes(playerPos.Y);
+
             if (!Enable) return;
         }
         public void Unload()
