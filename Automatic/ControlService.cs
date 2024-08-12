@@ -3,7 +3,9 @@ using Blish_HUD;
 using Blish_HUD.Controls.Extern;
 using Blish_HUD.Controls.Intern;
 using Blish_HUD.Input;
+using Gw2Sharp.WebApi.V2.Models;
 using Microsoft.Xna.Framework;
+using SharpDX.DirectWrite;
 using SharpDX.MediaFoundation;
 using System;
 using System.Collections.Generic;
@@ -24,7 +26,8 @@ namespace BhModule.TrueFisher.Automatic
     }
     public class ControlService
     {
-
+        private const int castLineMinRange = 300;
+        private const int castLineMaxRange = 550;
         private TrueFisherModule module;
         public bool Enable
         {
@@ -39,24 +42,31 @@ namespace BhModule.TrueFisher.Automatic
         private bool _enable = false;
 
         private Blish_HUD.Modules.Module pathingModule { get => GameService.Module.Modules.ToList().Find(i => i.ModuleInstance.Name == "Pathing")?.ModuleInstance; }
-        public VirtualKeyShort Skill_1 { get => GetGameBindButton(SettingMem.Skill_1); }
-        public VirtualKeyShort MoveForward { get => GetGameBindButton(SettingMem.MoveForward); }
-        public VirtualKeyShort MoveBackward { get => GetGameBindButton(SettingMem.MoveBackward); }
-        public VirtualKeyShort TurnLeft { get => GetGameBindButton(SettingMem.TurnLeft); }
-        public VirtualKeyShort TurnRight { get => GetGameBindButton(SettingMem.TurnRight); }
-        static public Dictionary<VirtualKeyShort, VirtualKeyShort> GameKeyMap = new() {
-            {VirtualKeyShort.ACCEPT,VirtualKeyShort.RIGHT },
-            {VirtualKeyShort.NONCONVERT,VirtualKeyShort.LEFT },
-        };
+        public VirtualKeyShort Skill_1 { get => PathService.GetGameBindButton(SettingMem.Skill_1); }
+        public VirtualKeyShort Skill_3 { get => PathService.GetGameBindButton(SettingMem.Skill_1); }
+        public VirtualKeyShort Interact { get => PathService.GetGameBindButton(SettingMem.Skill_1); }
+        public VirtualKeyShort Anchor { get => PathService.GetGameBindButton(SettingMem.Skill_1); }
+
+ 
 
         private Lang originUILanguage = Lang.UNKNOWN;
+
+        private Vector3 playerPos
+        {
+            get => GameService.Gw2Mumble.PlayerCharacter.Position;
+        }
+        private Vector3 playerFoward
+        {
+            get => GameService.Gw2Mumble.PlayerCharacter.Forward;
+        }
+        private Vector2 currentCheckPoint = new Vector2(0, 0);
 
 
         public ControlService(TrueFisherModule module)
         {
             this.module = module;
             SetUILang();
-            GameService.GameIntegration.Gw2Instance.Gw2Started += (sender, args) => { SetUILang(); };
+            GameService.GameIntegration.Gw2Instance.Gw2Started += delegate { SetUILang(); };
 
 
 
@@ -69,11 +79,30 @@ namespace BhModule.TrueFisher.Automatic
         {
 
         }
+
+        public void MoveTargetToScreenCenter(Vector2 screenPos)
+        {
+            float screenCenterX = GameService.Graphics.WindowWidth / 2;
+            float screenCenterY = GameService.Graphics.WindowHeight / 2;
+            float moveX = screenPos.X - screenCenterX;
+            float moveY = screenPos.Y - screenCenterY;
+
+            Mouse.Press(MouseButton.LEFT, (int)screenCenterX, (int)screenCenterY);
+            Mouse.Release(MouseButton.LEFT, (int)(screenCenterX + moveX), (int)(screenCenterY + moveY));
+
+        }
+ 
         public void CastLine()
         {
-            //range 500
-            Trace.WriteLine("Cast");
-
+            if (!module.FishService.HoleInRange) return;
+            Vector2 pos = module.FishService.HoleScreenPos;
+            if (pos.X < 0 || pos.Y < 0 || pos.X > GameService.Graphics.WindowWidth || pos.Y > GameService.Graphics.WindowHeight)
+            {
+                MoveTargetToScreenCenter(pos);
+            }
+            Mouse.SetPosition(((int)pos.X), ((int)pos.Y));
+            Keyboard.Stroke(Skill_1);
+            Thread.Sleep(50);
         }
         public void SetHook()
         {
@@ -84,6 +113,12 @@ namespace BhModule.TrueFisher.Automatic
         public void SetFishSucess()
         {
             module.FishService.Progression = 1.1f;
+        }
+
+        private void OnHoldNeard(object sender, ChangeEventArgs<bool> evt)
+        {
+            if (!evt.Current) return;
+            CastLine();
         }
         private void OnFishStateChange(object sender, ChangeEventArgs<FishState> evt)
         {
@@ -96,11 +131,13 @@ namespace BhModule.TrueFisher.Automatic
         }
         public void Start()
         {
+            module.FishService.HoleNeard += OnHoldNeard;
             module.FishService.StateChanged += OnFishStateChange;
             module.FishService.ProgressionChanged += OnFishProgressionChange;
         }
         public void Stop()
         {
+            module.FishService.HoleNeard += OnHoldNeard;
             module.FishService.StateChanged -= OnFishStateChange;
             module.FishService.ProgressionChanged -= OnFishProgressionChange;
         }
@@ -114,26 +151,7 @@ namespace BhModule.TrueFisher.Automatic
             Lang val = module.Settings.ChineseUI.Value ? Lang.CN : originUILanguage;
             GameProcess.Write(SettingMem.Language, BitConverter.GetBytes((int)val));
         }
-        public VirtualKeyShort GameKeyToVirtualKey(VirtualKeyShort key)
-        {
-            if (GameKeyMap.ContainsKey(key))
-            {
-                return GameKeyMap[key];
-            }
-            return key;
-        }
-        public VirtualKeyShort GetGameBindButton(MemTrail offset)
-        {
-            Mem<short> result = GameProcess.Read<short>(offset);
-            if (result.value == 0)
-            {
-                int[] secondKeyOffsetAry = offset.Offset.ToArray();
-                secondKeyOffsetAry[secondKeyOffsetAry.Length - 1] = secondKeyOffsetAry[secondKeyOffsetAry.Length - 1] + SettingMem.SecondKeyOffset;
-                MemTrail secondKeyTrail = new(offset.FirstOffset, secondKeyOffsetAry);
-                return GameKeyToVirtualKey((VirtualKeyShort)GameProcess.Read<short>(secondKeyTrail).value);
-            }
-            return GameKeyToVirtualKey((VirtualKeyShort)result.value);
-        }
+    
 
     }
 }

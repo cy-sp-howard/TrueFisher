@@ -1,0 +1,1 @@
+--debug --module "D:\TrueFisher\bin\Debug\TrueFisher.bhm"  --process WindowsTerminal --window ConsoleWindowClass
