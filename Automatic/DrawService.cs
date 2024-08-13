@@ -26,6 +26,7 @@ namespace BhModule.TrueFisher.Automatic
         public DrawService(TrueFisherModule module)
         {
             this.module = module;
+            DrawCenterDot();
             //DrawPic(new Toarupic(new Vector3(GameService.Gw2Mumble.PlayerCharacter.Position.X, GameService.Gw2Mumble.PlayerCharacter.Position.Y, GameService.Gw2Mumble.PlayerCharacter.Position.Z)));
         }
         public void Update(GameTime gameTime)
@@ -38,6 +39,11 @@ namespace BhModule.TrueFisher.Automatic
         {
 
         }
+        public void DrawCenterDot()
+        {
+
+            controlCollection.Add(new CenterDot());
+        }
         public void DrawPic(Control control)
         {
             controlCollection.Add(control);
@@ -45,7 +51,91 @@ namespace BhModule.TrueFisher.Automatic
 
 
     }
+    public class CenterDot : Control
+    {
+        private BasicEffect effect;
+        Texture2D circleTexture;
 
+        private Vector2 move = new Vector2(0, 0);
+        public CenterDot()
+        {
+            Parent = GameService.Graphics.SpriteScreen;
+            // 創建頂點緩衝區
+            using (var gdctx = GameService.Graphics.LendGraphicsDeviceContext())
+            {
+
+
+                effect = new BasicEffect(gdctx.GraphicsDevice);
+                effect.VertexColorEnabled = true;
+                effect.Projection = Matrix.CreateOrthographicOffCenter
+                    (0, gdctx.GraphicsDevice.Viewport.Width,
+                     gdctx.GraphicsDevice.Viewport.Height, 0,
+                     0, 1);
+
+                // 創建圓形紋理
+                circleTexture = new Texture2D(gdctx.GraphicsDevice, 200, 200);
+
+
+
+            }
+
+        }
+        public override void DoUpdate(GameTime gameTime)
+        {
+            var kstate = Keyboard.GetState();
+            var ballSpeed = 1000f;
+            if (kstate.IsKeyDown(Keys.Up))
+            {
+                move.Y -= ballSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
+            }
+
+            if (kstate.IsKeyDown(Keys.Down))
+            {
+                move.Y += ballSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
+            }
+
+            if (kstate.IsKeyDown(Keys.Left))
+            {
+                move.X -= ballSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
+            }
+
+            if (kstate.IsKeyDown(Keys.Right))
+            {
+                move.X += ballSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
+            }
+            Size = new(200, 200);
+            Location = new Point(500, 300);
+            using (var gdctx = GameService.Graphics.LendGraphicsDeviceContext())
+            {
+                circleTexture = new Texture2D(gdctx.GraphicsDevice, 200, 200);
+                Color[] data = new Color[circleTexture.Width * circleTexture.Height];
+                int radius = 50; // 圓形半徑
+                Vector2 center = new Vector2(circleTexture.Width / 2 + Location.X, circleTexture.Height / 2 + Location.Y);
+                for (int x = 0; x < circleTexture.Width; x++)
+                {
+                    for (int y = 0; y < circleTexture.Height; y++)
+                    {
+                        Vector2 pixel = new Vector2(x, y);
+                        if (Vector2.Distance(pixel, center) <= radius)
+                        {
+                            data[x + y * circleTexture.Width] = Color.White; // 填充白色
+                        }
+                    }
+                }
+                circleTexture.SetData(data);
+            }
+
+        }
+        protected override void Paint(SpriteBatch spriteBatch, Rectangle bounds)
+        {
+
+
+
+            spriteBatch.DrawOnCtrl(this, circleTexture, new Rectangle(0, 0, this.Width, this.Height), null, Color.White, 0f, Vector2.Zero, SpriteEffects.None);
+
+        }
+
+    }
     public class Toarupic : Control
     {
         VertexPositionColor[] vertices;
