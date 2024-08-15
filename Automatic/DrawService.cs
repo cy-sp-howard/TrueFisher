@@ -53,64 +53,23 @@ namespace BhModule.TrueFisher.Automatic
     }
     public class CenterDot : Control
     {
-        private BasicEffect effect;
         Texture2D circleTexture;
 
-        private Vector2 move = new Vector2(0, 0);
         public CenterDot()
         {
             Parent = GameService.Graphics.SpriteScreen;
-            // 創建頂點緩衝區
+            // 自己的大小
+            Size = new Point(100, 100);
+            UpdateLocation(null, null);
+            Graphics.SpriteScreen.Resized += UpdateLocation;
+
             using (var gdctx = GameService.Graphics.LendGraphicsDeviceContext())
             {
-
-
-                effect = new BasicEffect(gdctx.GraphicsDevice);
-                effect.VertexColorEnabled = true;
-                effect.Projection = Matrix.CreateOrthographicOffCenter
-                    (0, gdctx.GraphicsDevice.Viewport.Width,
-                     gdctx.GraphicsDevice.Viewport.Height, 0,
-                     0, 1);
-
-                // 創建圓形紋理
-                circleTexture = new Texture2D(gdctx.GraphicsDevice, 200, 200);
-
-
-
-            }
-
-        }
-        public override void DoUpdate(GameTime gameTime)
-        {
-            var kstate = Keyboard.GetState();
-            var ballSpeed = 1000f;
-            if (kstate.IsKeyDown(Keys.Up))
-            {
-                move.Y -= ballSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
-            }
-
-            if (kstate.IsKeyDown(Keys.Down))
-            {
-                move.Y += ballSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
-            }
-
-            if (kstate.IsKeyDown(Keys.Left))
-            {
-                move.X -= ballSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
-            }
-
-            if (kstate.IsKeyDown(Keys.Right))
-            {
-                move.X += ballSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
-            }
-            Size = new(200, 200);
-            Location = new Point(500, 300);
-            using (var gdctx = GameService.Graphics.LendGraphicsDeviceContext())
-            {
-                circleTexture = new Texture2D(gdctx.GraphicsDevice, 200, 200);
-                Color[] data = new Color[circleTexture.Width * circleTexture.Height];
-                int radius = 50; // 圓形半徑
-                Vector2 center = new Vector2(circleTexture.Width / 2 + Location.X, circleTexture.Height / 2 + Location.Y);
+                // 幾個像素
+                circleTexture = new Texture2D(gdctx.GraphicsDevice, Width, Height);
+                Color[] data = new Color[Width * Height];
+                int radius = 50;
+                Vector2 center = new Vector2(circleTexture.Width / 2, circleTexture.Height / 2);
                 for (int x = 0; x < circleTexture.Width; x++)
                 {
                     for (int y = 0; y < circleTexture.Height; y++)
@@ -126,13 +85,22 @@ namespace BhModule.TrueFisher.Automatic
             }
 
         }
+        private void UpdateLocation(object sender, EventArgs e)
+        {
+            //
+            this.Location = new Point((Graphics.SpriteScreen.Width / 2 - this.Width / 2), (Graphics.SpriteScreen.Height / 2 - this.Height / 2));
+        }
+        public override void DoUpdate(GameTime gameTime)
+        {
+            var speed = 100;
+            var val = speed * gameTime.ElapsedGameTime.TotalSeconds;
+            Size = new Point(Size.X + (int)val, Size.Y + (int)val);
+        }
+
         protected override void Paint(SpriteBatch spriteBatch, Rectangle bounds)
         {
-
-
-
-            spriteBatch.DrawOnCtrl(this, circleTexture, new Rectangle(0, 0, this.Width, this.Height), null, Color.White, 0f, Vector2.Zero, SpriteEffects.None);
-
+            //dst 設定一個畫布 於 control上 的pos 和大小，texture塞進去 縮放到合適大小
+            spriteBatch.DrawOnCtrl(this, circleTexture, new Rectangle(-100, 50, 300, 300), null, Color.White, 0f, Vector2.Zero, SpriteEffects.None);
         }
 
     }
