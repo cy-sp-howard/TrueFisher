@@ -11,6 +11,9 @@ using System.Diagnostics;
 using Blish_HUD.Controls;
 using Microsoft.Xna.Framework.Input;
 using Blish_HUD.Entities;
+using BhModule.TrueFisher.Utils;
+using System.Net;
+using System.Runtime.InteropServices;
 
 namespace BhModule.TrueFisher.Automatic
 {
@@ -26,7 +29,15 @@ namespace BhModule.TrueFisher.Automatic
         public DrawService(TrueFisherModule module)
         {
             this.module = module;
-            DrawCenterDot();
+            MEMORY_BASIC_INFORMATION mbi  = new MEMORY_BASIC_INFORMATION();
+            MEMORY_BASIC_INFORMATION mbi2 = new MEMORY_BASIC_INFORMATION();
+            var a = GameService.GameIntegration;
+            int result = MemUtil.VirtualQueryEx(GameService.GameIntegration.Gw2Instance.Gw2Process.Handle, IntPtr.Zero, out mbi, Marshal.SizeOf(mbi));
+
+            Process[] processes = Process.GetProcessesByName("WindowsTerminal");
+            if (processes.Length == 0) return; 
+            MemUtil.FindPattern("58 C8 EC 89 F7 7F 00 00 05 00 00 00 00 00 00 00", processes[0]);
+            //DrawCenterDot();
             //DrawPic(new Toarupic(new Vector3(GameService.Gw2Mumble.PlayerCharacter.Position.X, GameService.Gw2Mumble.PlayerCharacter.Position.Y, GameService.Gw2Mumble.PlayerCharacter.Position.Z)));
         }
         public void Update(GameTime gameTime)
