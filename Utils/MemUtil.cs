@@ -162,7 +162,7 @@ namespace BhModule.TrueFisher.Utils
                 if (patternItem.Length > 2)
                 {
                     //////////////////
-                    patternItem.Substring(patternItem.Length, 2);
+                    patternItem.Substring(patternItem.Length - 2, 2);
                 }
                 Convert.ToByte(pattern[i], 16);
             }
