@@ -14,6 +14,7 @@ using Blish_HUD.Entities;
 using BhModule.TrueFisher.Utils;
 using System.Net;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 
 namespace BhModule.TrueFisher.Automatic
 {
@@ -29,14 +30,13 @@ namespace BhModule.TrueFisher.Automatic
         public DrawService(TrueFisherModule module)
         {
             this.module = module;
-            MEMORY_BASIC_INFORMATION mbi  = new MEMORY_BASIC_INFORMATION();
-            MEMORY_BASIC_INFORMATION mbi2 = new MEMORY_BASIC_INFORMATION();
-            var a = GameService.GameIntegration;
-            int result = MemUtil.VirtualQueryEx(GameService.GameIntegration.Gw2Instance.Gw2Process.Handle, IntPtr.Zero, out mbi, Marshal.SizeOf(mbi));
-
-            Process[] processes = Process.GetProcessesByName("WindowsTerminal");
-            if (processes.Length == 0) return; 
-            MemUtil.FindPattern("58 C8 EC 89 F7 7F 00 00 05 00 00 00 00 00 00 00", processes[0]);
+            DateTime now = DateTime.Now;
+            MEMORY_BASIC_INFORMATION mbi = new MEMORY_BASIC_INFORMATION();
+            var handle = MemUtil.OpenProcess(0x400, false, GameService.GameIntegration.Gw2Instance.Gw2Process.Id);
+            MemUtil.VirtualQueryEx(handle, IntPtr.Zero, out mbi, Marshal.SizeOf(typeof(MEMORY_BASIC_INFORMATION)));
+            var a = MemUtil.FindPattern("65 48 8b 04 25 58 00 00 00 ba 08 00 00 00", GameService.GameIntegration.Gw2Instance.Gw2Process);
+            Trace.WriteLine((DateTime.Now - now).TotalSeconds);
+            //Trace.WriteLine("11");
             //DrawCenterDot();
             //DrawPic(new Toarupic(new Vector3(GameService.Gw2Mumble.PlayerCharacter.Position.X, GameService.Gw2Mumble.PlayerCharacter.Position.Y, GameService.Gw2Mumble.PlayerCharacter.Position.Z)));
         }

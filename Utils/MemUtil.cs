@@ -11,41 +11,11 @@ using System.Threading.Tasks;
 
 namespace BhModule.TrueFisher.Utils
 {
-    public class Mem<T>
-    {
-        public IntPtr address { get; set; }
-        public T value { get; set; }
 
-        public Mem<TT> Parse<TT>()
-        {
-            if (typeof(T) != typeof(byte[])) throw new NotImplementedException("Value not byte[]");
-            byte[] val = (byte[])(object)value;
-            if (typeof(TT) == typeof(long))
-            {
-                return (Mem<TT>)(object)new Mem<long>() { address = address, value = BitConverter.ToInt64(val, 0) };
-            }
-            else if (typeof(TT) == typeof(int))
-            {
-                return (Mem<TT>)(object)new Mem<int>() { address = address, value = BitConverter.ToInt32(val, 0) };
-
-            }
-            else if (typeof(TT) == typeof(float))
-            {
-                return (Mem<TT>)(object)new Mem<float>() { address = address, value = BitConverter.ToSingle(val, 0) };
-            }
-            else if (typeof(TT) == typeof(Int16))
-            {
-                return (Mem<TT>)(object)new Mem<Int16>() { address = address, value = BitConverter.ToInt16(val, 0) };
-            }
-            else if (typeof(TT) == typeof(byte))
-            {
-                return (Mem<TT>)(object)new Mem<byte>() { address = address, value = val[0] };
-            }
-            throw new NotImplementedException("Not match type");
-        }
-    }
     internal class MemUtil
     {
+        [DllImport("kernel32.dll", SetLastError = true)]
+        internal static extern IntPtr OpenProcess(uint dwDesiredAccess, bool bInheritHandle, int dwProcessId);
         [DllImport("kernel32.dll")]
         internal static extern bool WriteProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, byte[] lpBuffer, int nSize, out int lpNumberOfBytesWritten);
 
@@ -88,20 +58,21 @@ namespace BhModule.TrueFisher.Utils
         }
         internal static IntPtr FindPattern(string pattern, Process process, ProcessModule moudle = null)
         {
+            return Find.FindPattern(pattern, process, moudle);
+        }
+    }
+
+    public class Find
+    {
+        internal static IntPtr FindPattern(string pattern, Process process, ProcessModule moudle = null)
+        {
             if (moudle == null) moudle = process.MainModule;
             string[] patternAry = PatternToAry(pattern);
-            //byte[] bytes_a = new byte[hexValuesSplit.Length];
-
-            //for (int i = 0; i < hexValuesSplit.Length; i++)
-            //{
-            //    bytes_a[i] = Convert.ToByte(hexValuesSplit[i], 16);
-            //}
 
 
-            int patternSize = pattern.Replace(" ", "").Length / 2;
             int totalMemoryBytesSize = moudle.ModuleMemorySize;
             IntPtr startAddr = moudle.BaseAddress;
-            IntPtr endAddr = IntPtr.Add(moudle.BaseAddress, totalMemoryBytesSize - patternSize);
+            IntPtr endAddr = IntPtr.Add(moudle.BaseAddress, totalMemoryBytesSize - patternAry.Length);
 
 
             int pageSize = 6400000;
@@ -115,16 +86,17 @@ namespace BhModule.TrueFisher.Utils
             do
             {
                 IntPtr pageStartAddr = IntPtr.Add(startAddr, (currentPage - 1) * pageSize);
-                ReadProcessMemory(process.Handle, pageStartAddr, buffer, buffer.Length, out bufferReadSize);
-                IndexOfPattern(ref patternAry, ref buffer);
+                MemUtil.ReadProcessMemory(process.Handle, pageStartAddr, buffer, buffer.Length, out bufferReadSize);
+                int index = IndexOfPattern(ref patternAry, ref buffer);
+                if (index > -1) return IntPtr.Add(pageStartAddr, index);
                 currentPage += 1;
             } while (currentPage <= maxPage);
-
             return IntPtr.Zero;
         }
-        internal static string[] PatternToAry(string pattern)
+        static string[] PatternToAry(string pattern)
         {
-            bool isEven = pattern.Replace(" ", "").Length % 2 == 0;
+            pattern = pattern.Replace(" ", "").ToUpper();
+            bool isEven = pattern.Length % 2 == 0;
             if (!isEven) pattern = "0" + pattern;
             string[] result = new string[pattern.Length / 2];
             for (int i = 0; i < result.Length; i++)
@@ -133,17 +105,16 @@ namespace BhModule.TrueFisher.Utils
             }
             return result;
         }
-        internal static int IndexOfPattern(ref string[] pattern, ref byte[] source)
+        static int IndexOfPattern(ref string[] pattern, ref byte[] source)
         {
             if (source.Length < pattern.Length) { return -1; }
             for (int i = 0; i <= source.Length - pattern.Length; i++)
             {
-
-                isEqual(pattern, SubAry(ref source, 0, pattern.Length));
+                if (isEqual(pattern, SubAry(ref source, i, pattern.Length))) return i;
             }
-            return 0;
+            return -1;
         }
-        internal static T[] SubAry<T>(ref T[] ary, int startIndex, int size)
+        static T[] SubAry<T>(ref T[] ary, int startIndex, int size)
         {
             T[] result = new T[size];
             for (int i = 0; i < size; i++)
@@ -152,23 +123,68 @@ namespace BhModule.TrueFisher.Utils
             }
             return result;
         }
-        internal static bool isEqual(string[] pattern, byte[] memory)
+        static bool isEqual(string[] pattern, byte[] memory)
         {
-            if (pattern.Length != memory.Length) return false;
+            string patternString = String.Join("", pattern);
+            if (patternString.IndexOf("?") == -1)
+            {
+                return patternString == BitConverter.ToString(memory).Replace("-", "");
+            }
 
             for (int i = 0; i < pattern.Length; i++)
             {
                 string patternItem = pattern[i];
-                if (patternItem.Length > 2)
+
+                int maskIndex = patternItem.IndexOf("?");
+                if (maskIndex > -1)
                 {
-                    //////////////////
-                    patternItem.Substring(patternItem.Length - 2, 2);
+                    if (patternItem != "??" && memory[i].ToString()[maskIndex] != patternItem[maskIndex])
+                    {
+                        return false;
+                    }
+
                 }
-                Convert.ToByte(pattern[i], 16);
+                else if (memory[i] != Convert.ToByte(patternItem, 16))
+                {
+                    return false;
+                }
             }
+            return true;
         }
     }
+    public class Mem<T>
+    {
+        public IntPtr address { get; set; }
+        public T value { get; set; }
 
+        public Mem<TT> Parse<TT>()
+        {
+            if (typeof(T) != typeof(byte[])) throw new NotImplementedException("Value not byte[]");
+            byte[] val = (byte[])(object)value;
+            if (typeof(TT) == typeof(long))
+            {
+                return (Mem<TT>)(object)new Mem<long>() { address = address, value = BitConverter.ToInt64(val, 0) };
+            }
+            else if (typeof(TT) == typeof(int))
+            {
+                return (Mem<TT>)(object)new Mem<int>() { address = address, value = BitConverter.ToInt32(val, 0) };
+
+            }
+            else if (typeof(TT) == typeof(float))
+            {
+                return (Mem<TT>)(object)new Mem<float>() { address = address, value = BitConverter.ToSingle(val, 0) };
+            }
+            else if (typeof(TT) == typeof(Int16))
+            {
+                return (Mem<TT>)(object)new Mem<Int16>() { address = address, value = BitConverter.ToInt16(val, 0) };
+            }
+            else if (typeof(TT) == typeof(byte))
+            {
+                return (Mem<TT>)(object)new Mem<byte>() { address = address, value = val[0] };
+            }
+            throw new NotImplementedException("Not match type");
+        }
+    }
     [StructLayout(LayoutKind.Sequential)]
     public struct MEMORY_BASIC_INFORMATION
     {
