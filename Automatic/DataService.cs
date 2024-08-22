@@ -51,7 +51,11 @@ namespace BhModule.TrueFisher.Automatic
             byte[] dllBytes = Resource.Inject_release;
             string dllFullPath = Path.GetFullPath(dllName);
             byte[] dllFullPath_bytes = Encoding.ASCII.GetBytes(dllFullPath);
-            File.WriteAllBytes(dllFullPath, dllBytes);
+            try
+            {
+                File.WriteAllBytes(dllFullPath, dllBytes);
+            }
+            catch { }
             IntPtr dll = MemUtil.VirtualAllocEx(Handle, IntPtr.Zero, dllFullPath_bytes.Length, 0x1000, 0x04);
 
             int bytesWritten;
