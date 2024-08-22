@@ -55,13 +55,13 @@ namespace BhModule.TrueFisher.Automatic
         }
         static public VirtualKeyShort GetGameBindButton(MemTrail offset)
         {
-            Mem<short> result = GameProcess.Read<short>(offset);
+            Mem<short> result = DataService.Read<short>(offset);
             if (result.value == 0)
             {
                 int[] secondKeyOffsetAry = offset.Offset.ToArray();
                 secondKeyOffsetAry[secondKeyOffsetAry.Length - 1] = secondKeyOffsetAry[secondKeyOffsetAry.Length - 1] + SettingMem.SecondKeyOffset;
                 MemTrail secondKeyTrail = new(offset.FirstOffset, secondKeyOffsetAry);
-                return GameKeyToVirtualKey((VirtualKeyShort)GameProcess.Read<short>(secondKeyTrail).value);
+                return GameKeyToVirtualKey((VirtualKeyShort)DataService.Read<short>(secondKeyTrail).value);
             }
             return GameKeyToVirtualKey((VirtualKeyShort)result.value);
         }

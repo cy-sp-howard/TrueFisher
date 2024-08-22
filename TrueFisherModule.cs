@@ -27,6 +27,7 @@ namespace BhModule.TrueFisher
         public FishService FishService { get; private set; }
         public PathService PathService { get; private set; }
         public DrawService DrawService { get; private set; }
+        public DataService DataService { get; private set; }
         public ControlService ControlService { get; private set; }
 
         #region Service Managers
@@ -63,6 +64,7 @@ namespace BhModule.TrueFisher
         //game attached run; use --module "**.bhm"   will call when Blish BeginRun()
         protected override async Task LoadAsync()
         {
+            this.DataService = new DataService(this);
             this.FishService = new FishService(this);
             this.PathService = new PathService(this);
             this.DrawService = new DrawService(this);

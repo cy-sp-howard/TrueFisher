@@ -3,27 +3,57 @@ using Blish_HUD;
 using SharpDX.MediaFoundation;
 using System;
 using System.Collections.Generic;
+using System.Configuration.Assemblies;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BhModule.TrueFisher.Utils
+namespace BhModule.TrueFisher.Automatic
 {
-    public class GameProcess
+    public class DataService
     {
+
+        private TrueFisherModule module;
         static public Process Process { get => GameService.GameIntegration.Gw2Instance.Gw2Process; }
 
         static public IntPtr Handle { get => Process == null ? IntPtr.Zero : Process.Handle; }
         static public IntPtr Address { get => Process == null ? IntPtr.Zero : Process.MainModule.BaseAddress; }
         static public Mem<T> Read<T>(MemTrail trail)
         {
-            return MemUtil.ReadMem(GameProcess.Handle, trail.StartAddress, Marshal.SizeOf<T>(), trail.Offset).Parse<T>();
+            return MemUtil.ReadMem(DataService.Handle, trail.StartAddress, Marshal.SizeOf<T>(), trail.Offset).Parse<T>();
         }
         static public int Write(MemTrail trail, byte[] val)
         {
-            return MemUtil.WriteMem(GameProcess.Handle, trail.StartAddress, val, trail.Offset);
+            return MemUtil.WriteMem(DataService.Handle, trail.StartAddress, val, trail.Offset);
+        }
+        public DataService(TrueFisherModule module)
+        {
+            this.module = module;
+            InejectDLL();
+            GameService.GameIntegration.Gw2Instance.Gw2Started += delegate { InejectDLL(); };
+        }
+        void InejectDLL()
+        {
+            var env = System.Reflection.Assembly.GetExecutingAssembly().CodeBase;
+            string folder = Path.GetFullPath("x64");
+            string releaseDLLPath = Path.Combine(folder, "Release", "Inject.dll");
+            string debugDLLPath = Path.Combine(folder, "Debug", "Inject.dll");
+            bool releaseExist = File.Exists(releaseDLLPath);
+            bool debugExist = File.Exists(debugDLLPath);
+
+            byte[] dllBytes;
+            if (releaseExist)
+            {
+                dllBytes =  File.ReadAllBytes(releaseDLLPath);
+            } else if (debugExist)
+            {
+                dllBytes = File.ReadAllBytes(debugDLLPath);
+            }
+            int a = 0;
+
         }
 
     }
@@ -57,7 +87,7 @@ namespace BhModule.TrueFisher.Utils
 
     public class MemTrail
     {
-        public IntPtr StartAddress { get => IntPtr.Add(GameProcess.Address, FirstOffset); }
+        public IntPtr StartAddress { get => IntPtr.Add(DataService.Address, FirstOffset); }
         public IReadOnlyList<int> Offset { get => _offset.AsReadOnly(); }
         public int FirstOffset { get; private set; }
         private List<int> _offset = new();

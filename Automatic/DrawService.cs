@@ -30,12 +30,12 @@ namespace BhModule.TrueFisher.Automatic
         public DrawService(TrueFisherModule module)
         {
             this.module = module;
-            DateTime now = DateTime.Now;
-            MEMORY_BASIC_INFORMATION mbi = new MEMORY_BASIC_INFORMATION();
-            var handle = MemUtil.OpenProcess(0x400, false, GameService.GameIntegration.Gw2Instance.Gw2Process.Id);
-            MemUtil.VirtualQueryEx(handle, IntPtr.Zero, out mbi, Marshal.SizeOf(typeof(MEMORY_BASIC_INFORMATION)));
-            var a = MemUtil.FindPattern("65 48 8b 04 25 58 00 00 00 ba 08 00 00 00", GameService.GameIntegration.Gw2Instance.Gw2Process);
-            Trace.WriteLine((DateTime.Now - now).TotalSeconds);
+            //DateTime now = DateTime.Now;
+            //MEMORY_BASIC_INFORMATION mbi = new MEMORY_BASIC_INFORMATION();
+            //var handle = MemUtil.OpenProcess(0x400, false, GameService.GameIntegration.Gw2Instance.Gw2Process.Id);
+            //MemUtil.VirtualQueryEx(handle, IntPtr.Zero, out mbi, Marshal.SizeOf(typeof(MEMORY_BASIC_INFORMATION)));
+            //var a = MemUtil.FindPattern("65 48 8b 04 25 58 00 00 00 ba 08 00 00 00", GameService.GameIntegration.Gw2Instance.Gw2Process);
+            //Trace.WriteLine((DateTime.Now - now).TotalSeconds);
             //Trace.WriteLine("11");
             //DrawCenterDot();
             //DrawPic(new Toarupic(new Vector3(GameService.Gw2Mumble.PlayerCharacter.Position.X, GameService.Gw2Mumble.PlayerCharacter.Position.Y, GameService.Gw2Mumble.PlayerCharacter.Position.Z)));

@@ -36,7 +36,7 @@
     <Compile Include="Automatic\DrawService.cs" />
     <Compile Include="Automatic\FishService.cs" />
     <Compile Include="Automatic\PathService.cs" />
-    <Compile Include="Utils\GameProcess.cs" />
+    <Compile Include="Automatic\DataService.cs" />
     <Compile Include="TrueFisherModule.cs" />
     <Compile Include="ModuleSettings.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -91,6 +91,8 @@
       <Version>2.2.3</Version>
     </PackageReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <WCFMetadata Include="Connected Services\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
