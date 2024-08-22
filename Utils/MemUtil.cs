@@ -23,9 +23,19 @@ namespace BhModule.TrueFisher.Utils
         internal static extern bool ReadProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, [Out] byte[] lpBuffer, int nSize, out IntPtr lpNumberOfBytesRead);
 
         [DllImport("kernel32.dll", SetLastError = true)]
-        internal static extern IntPtr VirtualAllocEx(IntPtr hProcess, IntPtr lpAddress, uint dwSize, uint flAllocationType, uint flProtect);
+        internal static extern IntPtr VirtualAllocEx(IntPtr hProcess, IntPtr lpAddress, int dwSize, int flAllocationType, int flProtect);
         [DllImport("kernel32.dll", SetLastError = true)]
         internal static extern int VirtualQueryEx(IntPtr hProcess, IntPtr lpAddress, out MEMORY_BASIC_INFORMATION lpBuffer, int dwLength);
+        [DllImport("kernel32.dll")]
+        internal static extern IntPtr CreateRemoteThread(IntPtr hProcess, IntPtr lpThreadAttributes, int dwStackSize, IntPtr lpStartAddress, IntPtr lpParameter, int dwCreationFlags, IntPtr lpThreadId);
+        [DllImport("kernel32.dll", SetLastError = true)]
+        internal static extern bool WaitForSingleObject(IntPtr hHandle, uint dwMilliseconds);
+        [DllImport("kernel32", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.StdCall)]
+        internal static extern IntPtr GetProcAddress(IntPtr hModule, string lpProcName);
+        [DllImport("kernel32", CharSet = CharSet.Auto, SetLastError = true)]
+        internal static extern IntPtr GetModuleHandle(string lpModuleName);
+        [DllImport("User32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        private static extern long GetClassName(IntPtr hwnd, StringBuilder lpClassName, long nMaxCount);
 
         internal static int WriteMem(IntPtr hProcess, IntPtr addr, byte[] val, IReadOnlyList<int> ptrOffsetList = null)
         {
@@ -59,6 +69,25 @@ namespace BhModule.TrueFisher.Utils
         internal static IntPtr FindPattern(string pattern, Process process, ProcessModule moudle = null)
         {
             return Find.FindPattern(pattern, process, moudle);
+        }
+        internal static string GetClassNameOfWindow(IntPtr hwnd)
+        {
+            string className = "";
+            StringBuilder classText = null;
+            try
+            {
+                int cls_max_length = 1000;
+                classText = new StringBuilder("", cls_max_length + 5);
+                GetClassName(hwnd, classText, cls_max_length + 2);
+
+                if (!string.IsNullOrEmpty(classText.ToString()))
+                    className = classText.ToString();
+            }
+            catch (Exception ex)
+            {
+                className = ex.Message;
+            }
+            return className;
         }
     }
 

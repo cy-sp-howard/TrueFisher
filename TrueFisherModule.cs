@@ -91,7 +91,7 @@ namespace BhModule.TrueFisher
         protected override void Unload()
         {
             // Unload here
-
+            this.DataService.Unload();
             // All static members must be manually unset
         }
 

@@ -1,4 +1,5 @@
-﻿using BhModule.TrueFisher.Utils;
+﻿using AsyncWindowsClipboard.Clipboard.Native;
+using BhModule.TrueFisher.Utils;
 using Blish_HUD;
 using SharpDX.MediaFoundation;
 using System;
@@ -7,20 +8,23 @@ using System.Configuration.Assemblies;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Resources;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace BhModule.TrueFisher.Automatic
 {
     public class DataService
     {
-
-        private TrueFisherModule module;
+        
         static public Process Process { get => GameService.GameIntegration.Gw2Instance.Gw2Process; }
 
         static public IntPtr Handle { get => Process == null ? IntPtr.Zero : Process.Handle; }
         static public IntPtr Address { get => Process == null ? IntPtr.Zero : Process.MainModule.BaseAddress; }
+
         static public Mem<T> Read<T>(MemTrail trail)
         {
             return MemUtil.ReadMem(DataService.Handle, trail.StartAddress, Marshal.SizeOf<T>(), trail.Offset).Parse<T>();
@@ -29,30 +33,53 @@ namespace BhModule.TrueFisher.Automatic
         {
             return MemUtil.WriteMem(DataService.Handle, trail.StartAddress, val, trail.Offset);
         }
+
+        private TrueFisherModule module;
+        readonly string dllName = "inject.dll"; 
+        private IntPtr _injectAddress;
+        public IntPtr InjectAddress { get => _injectAddress; }
         public DataService(TrueFisherModule module)
         {
             this.module = module;
-            InejectDLL();
-            GameService.GameIntegration.Gw2Instance.Gw2Started += delegate { InejectDLL(); };
+            InjectDLL();
+            GameService.GameIntegration.Gw2Instance.Gw2Started += delegate { InjectDLL(); };
         }
-        void InejectDLL()
+        void InjectDLL()
         {
-            var env = System.Reflection.Assembly.GetExecutingAssembly().CodeBase;
-            string folder = Path.GetFullPath("x64");
-            string releaseDLLPath = Path.Combine(folder, "Release", "Inject.dll");
-            string debugDLLPath = Path.Combine(folder, "Debug", "Inject.dll");
-            bool releaseExist = File.Exists(releaseDLLPath);
-            bool debugExist = File.Exists(debugDLLPath);
+            //var _handler = Process.GetProcessesByName("powershell")[0].Handle;
 
-            byte[] dllBytes;
-            if (releaseExist)
+            byte[] dllBytes = Resource.Inject_release;
+            string dllFullPath = Path.GetFullPath(dllName);
+            byte[] dllFullPath_bytes = Encoding.ASCII.GetBytes(dllFullPath);
+            File.WriteAllBytes(dllFullPath, dllBytes);
+            IntPtr dll = MemUtil.VirtualAllocEx(Handle, IntPtr.Zero, dllFullPath_bytes.Length, 0x1000, 0x04);
+
+            int bytesWritten;
+            MemUtil.WriteProcessMemory(Handle, dll, dllFullPath_bytes, dllFullPath_bytes.Length, out bytesWritten);
+            IntPtr loadFunc = MemUtil.GetProcAddress(MemUtil.GetModuleHandle("kernel32"), "LoadLibraryA");
+
+            IntPtr thread = MemUtil.CreateRemoteThread(Handle, IntPtr.Zero, 0, loadFunc, dll, 0, IntPtr.Zero);
+            MemUtil.WaitForSingleObject(thread, 0xFFFFFFFF);
+
+        }
+        void EjectDLL()
+        {
+            foreach(ProcessModule module in Process.Modules)
             {
-                dllBytes =  File.ReadAllBytes(releaseDLLPath);
-            } else if (debugExist)
-            {
-                dllBytes = File.ReadAllBytes(debugDLLPath);
+                if (module.ModuleName == dllName)
+                {
+                    
+              IntPtr freeFunc = MemUtil.GetProcAddress(MemUtil.GetModuleHandle("kernel32"), "FreeLibrary");
+
+                    IntPtr thread = MemUtil.CreateRemoteThread(Handle, IntPtr.Zero, 0, freeFunc, module.BaseAddress, 0, IntPtr.Zero);
+                    MemUtil.WaitForSingleObject(thread, 0xFFFFFFFF);
+                    return;
+                }
             }
-            int a = 0;
+        }
+        public void Unload()
+        {
+            EjectDLL();
 
         }
 
