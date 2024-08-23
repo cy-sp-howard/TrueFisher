@@ -13,6 +13,15 @@ bool run()
 {
 
 	HANDLE hThread = CreateThread(NULL, 0, ThreadFunc, NULL, 0, NULL);
+	if (hThread == NULL)
+	{
+		throw std::runtime_error(std::string("CreateThread failed with code ") + std::to_string(GetLastError()));
+	}
+	else
+	{
+		// Thread will be exited by suiciding with FreeLibraryAndExitThread.
+		CloseHandle(hThread);
+	}
 	printf("next");
 	return true;
 }
