@@ -1,5 +1,7 @@
-﻿#include "pch.h"
-#include <stdio.h>
+﻿#include <stdio.h>
+#include "pch.h"
+#include "scanner.h"
+
 
 BOOL APIENTRY DllMain( HMODULE hModule,
                        DWORD  ul_reason_for_call,
@@ -7,7 +9,6 @@ BOOL APIENTRY DllMain( HMODULE hModule,
                      )
 {
 
-    printf("1111");
     switch (ul_reason_for_call)
     {
     case DLL_PROCESS_ATTACH:

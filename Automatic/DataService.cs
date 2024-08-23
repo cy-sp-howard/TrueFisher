@@ -35,7 +35,7 @@ namespace BhModule.TrueFisher.Automatic
         }
 
         private TrueFisherModule module;
-        readonly string dllName = "agent.dll"; 
+        readonly string dllName = "TruefisherAgent.dll"; 
         private IntPtr _injectAddress;
         public IntPtr InjectAddress { get => _injectAddress; }
         public DataService(TrueFisherModule module)
