@@ -1,21 +1,20 @@
-﻿#include <stdio.h>
-#include "pch.h"
+﻿#include "pch.h"
+#include <stdio.h>
+#include <fstream>
 #include "scanner.h"
 
-
-BOOL APIENTRY DllMain( HMODULE hModule,
-                       DWORD  ul_reason_for_call,
-                       LPVOID lpReserved
-                     )
+static DWORD WINAPI ThreadFunc(LPVOID param)
+{
+	auto a = FindPatternByModule("CC 33 C0 4C 8D 0D ?? ?? ?? ?? 4C 8B DA");
+	printf("%zu\n", a);
+	return 0;
+}
+bool run()
 {
 
-    switch (ul_reason_for_call)
-    {
-    case DLL_PROCESS_ATTACH:
-    case DLL_THREAD_ATTACH:
-    case DLL_THREAD_DETACH:
-    case DLL_PROCESS_DETACH:
-        break;
-    }
-    return TRUE;
+	HANDLE hThread = CreateThread(NULL, 0, ThreadFunc, NULL, 0, NULL);
+	printf("next");
+	return true;
 }
+
+bool IsRun = run();
