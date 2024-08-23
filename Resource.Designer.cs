@@ -63,9 +63,9 @@ namespace BhModule.TrueFisher {
         /// <summary>
         ///   查詢類型 System.Byte[] 的當地語系化資源。
         /// </summary>
-        internal static byte[] Inject_debug {
+        internal static byte[] Agent_debug {
             get {
-                object obj = ResourceManager.GetObject("Inject_debug", resourceCulture);
+                object obj = ResourceManager.GetObject("Agent_debug", resourceCulture);
                 return ((byte[])(obj));
             }
         }
@@ -73,9 +73,9 @@ namespace BhModule.TrueFisher {
         /// <summary>
         ///   查詢類型 System.Byte[] 的當地語系化資源。
         /// </summary>
-        internal static byte[] Inject_release {
+        internal static byte[] Agent_release {
             get {
-                object obj = ResourceManager.GetObject("Inject_release", resourceCulture);
+                object obj = ResourceManager.GetObject("Agent_release", resourceCulture);
                 return ((byte[])(obj));
             }
         }

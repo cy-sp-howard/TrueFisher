@@ -1,5 +1,4 @@
-﻿// dllmain.cpp : 定義 DLL 應用程式的進入點。
-#include "pch.h"
+﻿#include "pch.h"
 #include <stdio.h>
 
 BOOL APIENTRY DllMain( HMODULE hModule,
@@ -19,4 +18,3 @@ BOOL APIENTRY DllMain( HMODULE hModule,
     }
     return TRUE;
 }
-

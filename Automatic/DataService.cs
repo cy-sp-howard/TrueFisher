@@ -35,7 +35,7 @@ namespace BhModule.TrueFisher.Automatic
         }
 
         private TrueFisherModule module;
-        readonly string dllName = "inject.dll"; 
+        readonly string dllName = "agent.dll"; 
         private IntPtr _injectAddress;
         public IntPtr InjectAddress { get => _injectAddress; }
         public DataService(TrueFisherModule module)
@@ -48,7 +48,7 @@ namespace BhModule.TrueFisher.Automatic
         {
             //var _handler = Process.GetProcessesByName("powershell")[0].Handle;
 
-            byte[] dllBytes = Resource.Inject_release;
+            byte[] dllBytes = Resource.Agent_debug;
             string dllFullPath = Path.GetFullPath(dllName);
             byte[] dllFullPath_bytes = Encoding.ASCII.GetBytes(dllFullPath);
             try
