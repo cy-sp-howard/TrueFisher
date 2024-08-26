@@ -10,7 +10,8 @@
 //尋找基址 EXE + 2432B0 得ax->AX + 50 取值設在DX  設定DX + 334 內值，DX + 334 內值為語言ID
 //基址 + 50取內值 ，其值 + 334  得LANG地址
 // 
-//  
+// 
+// MatchIsAcceptable(m_match) 取參考此地址的function +0x13 得 call exe + 59da30 的地址
 //exe + 59da30(func) 取得以下資料(得基址的基值)
 //基址(EXE + 26ec0d0地址(分內值) + 50)跟偏移(EXE + 2B8A60(Func 188) 得出) 算出
 // call exe + 59da30 時 rdx 決定 EXE + 2B8A60取的值
@@ -20,6 +21,7 @@
 //取得基址後 + 24 得案件位置
 // 
 // 
+// No valid case for switch variable 'EState' 取參考此地址的function +0x78 進入call目標地址 + D2 得(59c892 會取的偏移植)
 // 片例所有案件
 // exe 59c883開頭  遍例會取經過他好幾次取得計算值
 //59c892 會取的偏移植
