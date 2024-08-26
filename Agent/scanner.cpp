@@ -163,7 +163,7 @@ std::vector<MemoryRegion> GetMemoryMap(int pid)
 
 const std::vector<MemoryRegion>& GetCodeRegions(const std::string& moduleName)
 {
-	std::unordered_map<std::string, std::vector<MemoryRegion>> lut;
+	static std::unordered_map<std::string, std::vector<MemoryRegion>> lut;
 
 	auto it = lut.find(moduleName);
 	if (it != lut.end())
@@ -177,7 +177,6 @@ const std::vector<MemoryRegion>& GetCodeRegions(const std::string& moduleName)
 		throw std::runtime_error("no such module");
 	}
 
-	const auto memoryMap = GetMemoryMap();
 	std::copy_if(memoryMap.begin(), memoryMap.end(), std::back_inserter(lut[moduleName]),
 		[hModule](const MemoryRegion& r) {
 			return r.hModule == hModule && r.protection == PROTECTION_READ_EXECUTE;
@@ -190,7 +189,7 @@ const std::vector<MemoryRegion>& GetCodeRegions(const std::string& moduleName)
 	return lut[moduleName];
 }
 
-std::vector<uintptr_t> FindStringByAry(const std::vector<std::string>& strings, const std::string& moduleName)
+std::vector<uintptr_t> FindReadonlyStringByAry(const std::vector<std::string>& strings, const std::string& moduleName)
 {
 	std::vector<uintptr_t> results(strings.size());
 	int stringsFound = 0;
@@ -201,7 +200,7 @@ std::vector<uintptr_t> FindStringByAry(const std::vector<std::string>& strings, 
 		uintptr_t found = 0;
 		try
 		{
-			found = FindString(str, moduleName);
+			found = FindReadonlyString(str, moduleName);
 		}
 		catch (...)
 		{
@@ -223,9 +222,9 @@ std::vector<uintptr_t> FindStringByAry(const std::vector<std::string>& strings, 
 	return results;
 }
 
-std::map<std::string, uintptr_t> FindStringByAry2(const std::vector<std::string>& strings, const std::string& moduleName)
+std::map<std::string, uintptr_t> FindReadonlyStringByAry2(const std::vector<std::string>& strings, const std::string& moduleName)
 {
-	auto results = FindStringByAry(strings, moduleName);
+	auto results = FindReadonlyStringByAry(strings, moduleName);
 
 	std::map<std::string, uintptr_t> resultMap;
 	for (size_t i = 0; i < results.size(); i++)
@@ -235,7 +234,7 @@ std::map<std::string, uintptr_t> FindStringByAry2(const std::vector<std::string>
 	return resultMap;
 }
 
-bool MatchMaskedPattern(uintptr_t address, const char* byteMask, const char* checkMask)
+static bool MatchMaskedPattern(uintptr_t address, const char* byteMask, const char* checkMask)
 {
 	for (; *checkMask; ++checkMask, ++address, ++byteMask)
 		if (*checkMask == 'x' && *(char*)address != *byteMask)
@@ -315,7 +314,7 @@ uintptr_t FollowRelativeAddress(uintptr_t adr, int trail)
 }
 
 // The preprocessing function for Boyer Moore's bad character heuristic
-void badCharHeuristic(const uint8_t* str, size_t size, int badchar[NO_OF_CHARS])
+static void badCharHeuristic(const uint8_t* str, size_t size, int badchar[NO_OF_CHARS])
 {
 	size_t i;
 
@@ -330,7 +329,7 @@ void badCharHeuristic(const uint8_t* str, size_t size, int badchar[NO_OF_CHARS])
 
 /* A pattern searching function that uses Bad Character Heuristic of
 Boyer Moore Algorithm */
-const uint8_t* boyermoore(const uint8_t* txt, const size_t n, const uint8_t* pat, const size_t m)
+static const uint8_t* boyermoore(const uint8_t* txt, const size_t n, const uint8_t* pat, const size_t m)
 {
 	if (m > n || m < 1)
 		return nullptr;
@@ -385,7 +384,7 @@ const uint8_t* boyermoore(const uint8_t* txt, const size_t n, const uint8_t* pat
 }
 
 
-uintptr_t FindString(const std::string& str, const std::string& moduleName, int instance)
+uintptr_t FindReadonlyString(const std::string& str, const std::string& moduleName, int instance)
 {
 	if (!moduleMap.count(moduleName))
 		moduleMap[moduleName] = GetModuleByName(moduleName);
