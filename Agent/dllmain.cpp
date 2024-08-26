@@ -4,18 +4,30 @@
 #include <string>
 #include "scanner.h"
 
+// 
 // 00 00 00 0? 00 00 00 55 36 11 00 00 00 00 00 (+3) LANG
-// 設定LANG EXE+504a90
-//尋找基址 EXE + 2432B0 得ax->AX + 50 取值設在DX  設定DX + 334 內值，DX + 334 內值為基址
-//基址 + 50取內值 ，其值 + 334  的LANG地址
+// 設定LANG EXE+504a90 (ValidateLanguage(language)第一個參考 偏移+0x24 )
+//尋找基址 EXE + 2432B0 得ax->AX + 50 取值設在DX  設定DX + 334 內值，DX + 334 內值為語言ID
+//基址 + 50取內值 ，其值 + 334  得LANG地址
 // 
+//  
+//exe + 59da30(func) 取得以下資料(得基址的基值)
+//基址(EXE + 26ec0d0地址(分內值) + 50)跟偏移(EXE + 2B8A60(Func 188) 得出) 算出
+// call exe + 59da30 時 rdx 決定 EXE + 2B8A60取的值
+//也就是說 call exe + 59da30 時 rdx  會決定 基值得基質的值
+
+//
+//exe + 5a3a50 拿(基址的基指) + 10 取得基址
+//
+//取得基址後 + 24 得案件位置
 // 
-// exe + 59DA58 得RAX => RAX+24  取得案件地址
 // 
 // 85 C0 75 F7 (gw2 module) while的根
 static DWORD WINAPI ThreadFunc(LPVOID param)
 {
-	auto a = FindPatternByModule("CC 33 C0 4C 8D 0D ?? ?? ?? ?? 4C 8B DA");
+	uintptr_t abc = 0x7FF6E040C0D0;
+	auto keybindbase = (int(__thiscall*)(int,int,int, uintptr_t))FindPatternByModule("E8 E3 AA FF FF");
+	int a = keybindbase(0, 0, 0, abc);
 	return 0;
 }
 bool run()
