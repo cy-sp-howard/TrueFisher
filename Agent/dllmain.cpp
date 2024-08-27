@@ -34,6 +34,9 @@
 // 
 // 
 // 85 C0 75 F7 (gw2 module) while的根
+struct {
+	char ImHere[20];
+} address;
 static DWORD WINAPI ThreadFunc(LPVOID param)
 {
 	uintptr_t abc = 0x7FF6E040C0D0;
@@ -43,6 +46,7 @@ static DWORD WINAPI ThreadFunc(LPVOID param)
 }
 bool run()
 {
+	strcpy(address.ImHere, "Im Here");
 	HANDLE hThread = CreateThread(NULL, 0, ThreadFunc, NULL, 0, NULL);
 	if (hThread == NULL)
 	{
