@@ -34,19 +34,27 @@
 // 
 // 
 // 85 C0 75 F7 (gw2 module) while的根
+//
+// 12dce26 準被call finsh ready func
+
+
 struct {
-	char ImHere[20];
+	std::string ImHere = "Im Here";
+	uintptr_t addr1;
 } address;
 static DWORD WINAPI ThreadFunc(LPVOID param)
 {
-	uintptr_t abc = 0x7FF6E040C0D0;
-	auto keybindbase = (int(__thiscall*)(int,int,int, uintptr_t))FindPatternByModule("E8 E3 AA FF FF");
-	int a = keybindbase(0, 0, 0, abc);
+	address.addr1 = 0x7FF6E040C0D0;
+	//auto keybindbase = (int(__thiscall*)(int,int,int, uintptr_t))FindPatternByModule("E8 E3 AA FF FF");
+	//int a = keybindbase(0, 0, 0, abc);
+	while (true)
+	{
+		printf("11");
+	}
 	return 0;
 }
 bool run()
 {
-	strcpy(address.ImHere, "Im Here");
 	HANDLE hThread = CreateThread(NULL, 0, ThreadFunc, NULL, 0, NULL);
 	if (hThread == NULL)
 	{

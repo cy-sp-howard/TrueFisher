@@ -68,6 +68,7 @@ namespace BhModule.TrueFisher.Automatic
         }
         void EjectDLL()
         {
+            if (Process == null) return;
             foreach(ProcessModule module in Process.Modules)
             {
                 if (module.ModuleName == dllName)
