@@ -36,11 +36,17 @@
 // 85 C0 75 F7 (gw2 module) while的根
 //
 // 12dce26 準被call finsh ready func
+// 掃agent?
+//  Gw2-64.exe+2432B0 { 取得"甲" }      
+// [ [甲+98]+60]  初始值
+// [[[甲+98]+60]+[[[甲+98]+6C]*8] 最後值
+//[[甲 + 98] + 60 + 8 * N] 為有值
+//[[[甲 + 98] + 60 + 8 * N]]+5CA0 為釣魚地址
 
 
 struct {
 	std::string ImHere = "Im Here";
-	uintptr_t addr1;
+	uintptr_t addr1 = 0;
 } address;
 static DWORD WINAPI ThreadFunc(LPVOID param)
 {
