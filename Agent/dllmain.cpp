@@ -46,22 +46,40 @@
 
 struct {
 	std::string ImHere = "Im Here";
-	uintptr_t addr1 = 0;
+	uintptr_t langPtr = 0;
 } address;
-static DWORD WINAPI ThreadFunc(LPVOID param)
-{
-	address.addr1 = 0x7FF6E040C0D0;
-	//auto keybindbase = (int(__thiscall*)(int,int,int, uintptr_t))FindPatternByModule("E8 E3 AA FF FF");
-	//int a = keybindbase(0, 0, 0, abc);
-	while (true)
-	{
-		printf("11");
-	}
+
+
+void SetLangAddr() {
+	uintptr_t setLangFuncPtr = FollowRelativeAddress(FindReadonlyString("ValidateLanguage(language)") + 0x24);
+	auto getBase = (uintptr_t(__thiscall*)())FollowRelativeAddress(setLangFuncPtr + 0x9);
+	/*int addrOffset1 = *(int*)setLangFuncPtr + 0x10;
+	int addrOffset2 = *(int*)setLangFuncPtr + 0x13;
+	uintptr_t basePtr = getBase();
+	uintptr_t base2Ptr = *(uintptr_t*)(basePtr + addrOffset1);
+	address.langPtr = base2Ptr + addrOffset2;*/
+
+}
+
+void __fastcall GameLoopCB() {
+	SetLangAddr();
+}
+
+
+static DWORD WINAPI SetHook(LPVOID param) {
+
+	uintptr_t funcPtr = FollowRelativeAddress(FindReadonlyString("ViewAdvanceDevice") + 0xa);
+	auto cbPtrSpace = (void(__thiscall***)())FollowRelativeAddress(funcPtr + 0x3);
+
+	
 	return 0;
 }
+
 bool run()
 {
-	HANDLE hThread = CreateThread(NULL, 0, ThreadFunc, NULL, 0, NULL);
+
+
+	HANDLE hThread = CreateThread(NULL, 0, SetHook, NULL, 0, NULL);
 	if (hThread == NULL)
 	{
 		throw std::runtime_error(std::string("CreateThread failed with code ") + std::to_string(GetLastError()));

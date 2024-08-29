@@ -430,23 +430,40 @@ uintptr_t FindReadonlyString(const std::string& str, const std::string& moduleNa
 			size_t regionSize = region.size;
 
 
-			do
-			{
-				auto found = boyermoore(baseAdr, regionSize, (const uint8_t*)&addr, sizeof(uintptr_t));
-				if (found)
-				{
-					// Prevent false positives by checking if the reference is relocated.
-					if ((verifyWithRelocs && !exeFile.isReloc((uintptr_t)found - (uintptr_t)hModule)) || instance-- > 0)
-					{
-						// continue searching
-						baseAdr = found + 1;
-						regionSize -= (size_t)(found - baseAdr + 1);
-						continue;
-					}
+			//do
+			//{
+			//	auto found = boyermoore(baseAdr, regionSize, (const uint8_t*)&addr, sizeof(uintptr_t));
+			//	if (found)
+			//	{
+			//		// Prevent false positives by checking if the reference is relocated.
+			//		if ((verifyWithRelocs && !exeFile.isReloc((uintptr_t)found - (uintptr_t)hModule)) || instance-- > 0)
+			//		{
+			//			// continue searching
+			//			baseAdr = found + 1;
+			//			regionSize -= (size_t)(found - baseAdr + 1);
+			//			continue;
+			//		}
 
-					ret = (uintptr_t)found;
+			//		ret = (uintptr_t)found;
+			//	}
+			//} while (false);
+			uintptr_t endAdr = (uintptr_t)(baseAdr + regionSize);
+			for (uintptr_t adr = (uintptr_t)baseAdr; adr < endAdr; adr++)
+			{
+				if (FollowRelativeAddress(adr) == addr)
+				{
+					// Prevent false poritives by checking if the reference occurs in a LEA instruction.
+					uint16_t opcode = *(uint16_t*)(adr - 3);
+					if (opcode == 0x8D48 || opcode == 0x8D4C)
+					{
+						if (instance-- <= 0)
+						{
+							ret = adr;
+							break;
+						}
+					}
 				}
-			} while (false);
+			}
 
 			if (ret)
 				break;
