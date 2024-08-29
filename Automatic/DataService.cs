@@ -1,6 +1,7 @@
 ﻿using AsyncWindowsClipboard.Clipboard.Native;
 using BhModule.TrueFisher.Utils;
 using Blish_HUD;
+using Microsoft.Xna.Framework.Graphics.PackedVector;
 using SharpDX.MediaFoundation;
 using System;
 using System.Collections.Generic;
@@ -14,12 +15,13 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using TmfLib.Pathable;
 
 namespace BhModule.TrueFisher.Automatic
 {
     public class DataService
     {
-        
+
         static public Process Process { get => GameService.GameIntegration.Gw2Instance.Gw2Process; }
 
         static public IntPtr Handle { get => Process == null ? IntPtr.Zero : Process.Handle; }
@@ -35,14 +37,43 @@ namespace BhModule.TrueFisher.Automatic
         }
 
         private TrueFisherModule module;
-        readonly string dllName = "TruefisherAgent.dll"; 
+        readonly string dllName = "TruefisherAgent.dll";
         private IntPtr _injectAddress;
         public IntPtr InjectAddress { get => _injectAddress; }
         public DataService(TrueFisherModule module)
         {
             this.module = module;
-            InjectDLL();
-            GameService.GameIntegration.Gw2Instance.Gw2Started += delegate { InjectDLL(); };
+            Test();
+            //InjectDLL();
+            //GameService.GameIntegration.Gw2Instance.Gw2Started += delegate { InjectDLL(); };
+        }
+        void Test()
+        {
+            var base1 = MemUtil.ReadMem(DataService.Handle, new IntPtr(0x26E5B828290 + 0x98), 8).Parse<IntPtr>();
+            var firtAddr = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(base1.value, 0x60), 8).Parse<IntPtr>();
+            var lastAddrOffset = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(base1.value, 0x6C), 8).Parse<int>().value * 8;
+            //213949F8CF0
+            var lastAddr = IntPtr.Add(firtAddr.value, lastAddrOffset);
+            var index = 0;
+            var currentAddrInt = firtAddr.value.ToInt64();
+            var lastAddrInt = lastAddr.ToInt64();
+            List<Mem<IntPtr>> results = new List<Mem<IntPtr>>();
+
+            while (currentAddrInt < lastAddrInt)
+            {
+                var addr = IntPtr.Add(firtAddr.value, 8 * index);
+                var target = MemUtil.ReadMem(DataService.Handle, addr, 8).Parse<IntPtr>();
+       
+                if (target.value != IntPtr.Zero)
+                {
+                    results.Add(target);
+                }
+                currentAddrInt = addr.ToInt64();
+                index += 1;
+            }
+
+   
+            Trace.WriteLine("ss");
         }
         void InjectDLL()
         {
@@ -69,12 +100,12 @@ namespace BhModule.TrueFisher.Automatic
         void EjectDLL()
         {
             if (Process == null) return;
-            foreach(ProcessModule module in Process.Modules)
+            foreach (ProcessModule module in Process.Modules)
             {
                 if (module.ModuleName == dllName)
                 {
-                    
-              IntPtr freeFunc = MemUtil.GetProcAddress(MemUtil.GetModuleHandle("kernel32"), "FreeLibrary");
+
+                    IntPtr freeFunc = MemUtil.GetProcAddress(MemUtil.GetModuleHandle("kernel32"), "FreeLibrary");
 
                     IntPtr thread = MemUtil.CreateRemoteThread(Handle, IntPtr.Zero, 0, freeFunc, module.BaseAddress, 0, IntPtr.Zero);
                     MemUtil.WaitForSingleObject(thread, 0xFFFFFFFF);

@@ -46,6 +46,7 @@
 
 struct {
 	std::string ImHere = "Im Here";
+	uintptr_t originHookCB = 0;
 	uintptr_t langPtr = 0;
 } address;
 
@@ -62,16 +63,28 @@ void SetLangAddr() {
 }
 
 void __fastcall GameLoopCB() {
+	auto originCB = (void(__thiscall*)())address.originHookCB;
+	originCB();
 	SetLangAddr();
+}
+auto _cb = (uintptr_t)&GameLoopCB;
+auto cb = (uintptr_t*)&_cb;
+
+template <typename T>
+T* Wrapper(T& target) {
+	T* result = &target;
+	return result;
 }
 
 
 static DWORD WINAPI SetHook(LPVOID param) {
 
 	uintptr_t funcPtr = FollowRelativeAddress(FindReadonlyString("ViewAdvanceDevice") + 0xa);
-	auto cbPtrSpace = (void(__thiscall***)())FollowRelativeAddress(funcPtr + 0x3);
+	auto cbPtrSpace = (uintptr_t***)FollowRelativeAddress(funcPtr + 0x3);
 
-	
+	address.originHookCB = ***cbPtrSpace;
+
+	//**cbPtrSpace = cb;
 	return 0;
 }
 
