@@ -41,13 +41,15 @@
 //[[[甲 + 98] + 60 + 8 * N]]+5CA0 為釣魚地址
 
 
-struct {
+struct ADDRESS {
 	std::string ImHere = "Im Here";
 	bool ready = false;
 	uintptr_t langPtr = 0;
+	uintptr_t fishPtr = 0;
 	std::vector<uintptr_t> characterAry;
-	int selfCharacterIndex = -1;
-} address;
+	uintptr_t selfCharacterPtr = 0;
+};
+ADDRESS address;
 
 struct character {
 
@@ -64,37 +66,42 @@ void SetLangAddr() {
 
 }
 void SetFishAddr() {
-	auto getBase = (uintptr_t*(__thiscall*)())FollowRelativeAddress(FindReadonlyString("ViewAdvanceCharacter") + 0xA);
-	auto ary0 = getBase();
-	uintptr_t* baseAddr = (uintptr_t*)ary0[19];
-	uintptr_t loopStartAddr = baseAddr[12];
-	uintptr_t loopEndAddr = loopAry[0] + *((uintptr_t*)(baseAddr + 0x6C)) * 8;
-	uintptr_t currentLoopAddr = loopAry[0];
-	int loopIndex = 0;
+	auto getBase = (uintptr_t(__thiscall*)())FollowRelativeAddress(FindReadonlyString("ViewAdvanceCharacter") + 0xA);
+	uintptr_t baseAddr = *(uintptr_t*)(getBase() + 0x98);
+	uintptr_t loopStartAddr = *(uintptr_t*)(baseAddr + 0x60);
+	uintptr_t loopEndAddr = loopStartAddr + (*(int*)(baseAddr + 0x6C)) * 8;
+	uintptr_t currentLoopAddr = loopStartAddr;
 	address.characterAry.clear();
-	address.selfCharacterIndex = -1;
-	while (currentLoopAddr < loopEndAddr)
+	address.selfCharacterPtr = 0;
+	while (currentLoopAddr <= loopEndAddr)
 	{
-		currentLoopAddr = ((uintptr_t*)loopAry)[loopIndex];
 		// addr 裡面是一個ptr ary ,index 1的ptr  call 他帶rcx好像會取得 該charater 狀態 含pos
 		uintptr_t* addr = (uintptr_t*)currentLoopAddr;
 		if (*addr) {
 			address.characterAry.push_back(*addr);
+			uintptr_t _addr = (uintptr_t)*addr;  //_addr動態的
+			//[[*ADDR + 08]+ 60]  (bool(__thiscall*)(uintptr_t))
 
-			uintptr_t* staticfuncAry = (uintptr_t*)(addr[1]);
-			auto isSelf = (bool(__thiscall*)(uintptr_t))(staticfuncAry[12]);
-			auto getCharacter = (character(__thiscall*)())(staticfuncAry[0]);
-			if (isSelf(addr[1])) {
-				address.selfCharacterIndex = loopIndex;
-				auto getNextPtr = (uintptr_t*(__thiscall*)(uintptr_t))(addr[0] + 0x2C0);
-				if (!getNextPtr) continue;
-				auto m = *getNextPtr;
-				uintptr_t fishStateAddr = (*((uintptr_t*)((uintptr_t)m + 0x5CA0)) + 0x18);
-					
+			//(*ADDR + 08)
+			auto isSelf = (bool(__thiscall*)(uintptr_t))(*((uintptr_t*)(*((uintptr_t*)(_addr + 0x8)) + 0x60)));
+			//7FF712C496B0
+			if (isSelf(_addr + 0x8)) {
+				address.selfCharacterPtr = _addr;
+
+				uintptr_t __addr = *(uintptr_t*)_addr; //__addr 記憶體(可能是func)Ary 固定
+				auto getNextPtr = (uintptr_t (__thiscall*)(uintptr_t))(*((uintptr_t*)(__addr + 0x2C0))); 
+				auto _base = getNextPtr(_addr);
+				if (!_base) continue;
+				address.fishPtr = *((uintptr_t*)(_base + 0x5CA0));
+
+				auto a = address.fishPtr + 0x18;
+				int b = 1;
+
 			}
 
 		}
-		loopIndex += 1;
+
+		currentLoopAddr += 8;
 	}
 
 
