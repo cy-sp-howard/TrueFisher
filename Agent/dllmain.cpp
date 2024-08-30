@@ -3,12 +3,9 @@
 #include <fstream>
 #include <string>
 #include "scanner.h"
+#include "hooker.h"
 
 // 
-// 00 00 00 0? 00 00 00 55 36 11 00 00 00 00 00 (+3) LANG
-// 設定LANG EXE+504a90 (ValidateLanguage(language)第一個參考 偏移+0x24 )
-//尋找基址 EXE + 2432B0 得ax->AX + 50 取值設在DX  設定DX + 334 內值，DX + 334 內值為語言ID
-//基址 + 50取內值 ，其值 + 334  得LANG地址
 // 
 // 
 // MatchIsAcceptable(m_match) 取參考此地址的function +0x13 得 call exe + 59da30 的地址
@@ -46,7 +43,7 @@
 
 struct {
 	std::string ImHere = "Im Here";
-	uintptr_t originHookCB = 0;
+	bool ready = false;
 	uintptr_t langPtr = 0;
 } address;
 
@@ -54,21 +51,20 @@ struct {
 void SetLangAddr() {
 	uintptr_t setLangFuncPtr = FollowRelativeAddress(FindReadonlyString("ValidateLanguage(language)") + 0x24);
 	auto getBase = (uintptr_t(__thiscall*)())FollowRelativeAddress(setLangFuncPtr + 0x9);
-	/*int addrOffset1 = *(int*)setLangFuncPtr + 0x10;
-	int addrOffset2 = *(int*)setLangFuncPtr + 0x13;
+	int addrOffset1 = *(char*)(setLangFuncPtr + 0x10);
+	int addrOffset2 = *(int*)(setLangFuncPtr + 0x13);
 	uintptr_t basePtr = getBase();
 	uintptr_t base2Ptr = *(uintptr_t*)(basePtr + addrOffset1);
-	address.langPtr = base2Ptr + addrOffset2;*/
+	address.langPtr = base2Ptr + addrOffset2;
 
 }
 
 void __fastcall GameLoopCB() {
-	auto originCB = (void(__thiscall*)())address.originHookCB;
-	originCB();
-	SetLangAddr();
+	if (!address.ready) {
+		SetLangAddr();
+		address.ready = true;
+	}
 }
-auto _cb = (uintptr_t)&GameLoopCB;
-auto cb = (uintptr_t*)&_cb;
 
 template <typename T>
 T* Wrapper(T& target) {
@@ -76,15 +72,14 @@ T* Wrapper(T& target) {
 	return result;
 }
 
-
+Hooker m_hooker;
 static DWORD WINAPI SetHook(LPVOID param) {
 
 	uintptr_t funcPtr = FollowRelativeAddress(FindReadonlyString("ViewAdvanceDevice") + 0xa);
-	auto cbPtrSpace = (uintptr_t***)FollowRelativeAddress(funcPtr + 0x3);
+	uintptr_t cbPtrSpace = FollowRelativeAddress(funcPtr + 0x3);
+	m_hooker.hookVT(*(uintptr_t*)cbPtrSpace, 0, (uintptr_t)GameLoopCB);
 
-	address.originHookCB = ***cbPtrSpace;
 
-	//**cbPtrSpace = cb;
 	return 0;
 }
 
