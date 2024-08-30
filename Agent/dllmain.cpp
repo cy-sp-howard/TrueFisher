@@ -45,8 +45,13 @@ struct {
 	std::string ImHere = "Im Here";
 	bool ready = false;
 	uintptr_t langPtr = 0;
+	std::vector<uintptr_t> characterAry;
+	int selfCharacterIndex = -1;
 } address;
 
+struct character {
+
+};
 
 void SetLangAddr() {
 	uintptr_t setLangFuncPtr = FollowRelativeAddress(FindReadonlyString("ValidateLanguage(language)") + 0x24);
@@ -58,12 +63,50 @@ void SetLangAddr() {
 	address.langPtr = base2Ptr + addrOffset2;
 
 }
+void SetFishAddr() {
+	auto getBase = (uintptr_t*(__thiscall*)())FollowRelativeAddress(FindReadonlyString("ViewAdvanceCharacter") + 0xA);
+	auto ary0 = getBase();
+	uintptr_t* baseAddr = (uintptr_t*)ary0[19];
+	uintptr_t loopStartAddr = baseAddr[12];
+	uintptr_t loopEndAddr = loopAry[0] + *((uintptr_t*)(baseAddr + 0x6C)) * 8;
+	uintptr_t currentLoopAddr = loopAry[0];
+	int loopIndex = 0;
+	address.characterAry.clear();
+	address.selfCharacterIndex = -1;
+	while (currentLoopAddr < loopEndAddr)
+	{
+		currentLoopAddr = ((uintptr_t*)loopAry)[loopIndex];
+		// addr 裡面是一個ptr ary ,index 1的ptr  call 他帶rcx好像會取得 該charater 狀態 含pos
+		uintptr_t* addr = (uintptr_t*)currentLoopAddr;
+		if (*addr) {
+			address.characterAry.push_back(*addr);
+
+			uintptr_t* staticfuncAry = (uintptr_t*)(addr[1]);
+			auto isSelf = (bool(__thiscall*)(uintptr_t))(staticfuncAry[12]);
+			auto getCharacter = (character(__thiscall*)())(staticfuncAry[0]);
+			if (isSelf(addr[1])) {
+				address.selfCharacterIndex = loopIndex;
+				auto getNextPtr = (uintptr_t*(__thiscall*)(uintptr_t))(addr[0] + 0x2C0);
+				if (!getNextPtr) continue;
+				auto m = *getNextPtr;
+				uintptr_t fishStateAddr = (*((uintptr_t*)((uintptr_t)m + 0x5CA0)) + 0x18);
+					
+			}
+
+		}
+		loopIndex += 1;
+	}
+
+
+
+}
 
 void __fastcall GameLoopCB() {
 	if (!address.ready) {
 		SetLangAddr();
 		address.ready = true;
 	}
+	SetFishAddr();
 }
 
 template <typename T>
