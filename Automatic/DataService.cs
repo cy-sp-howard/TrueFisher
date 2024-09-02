@@ -47,7 +47,9 @@ namespace BhModule.TrueFisher.Automatic
         public IntPtr InjectAddress { get => _injectAddress; }
 
         private List<Mem<IntPtr>> agents { get; set; } = new List<Mem<IntPtr>>();
+        private List<Mem<IntPtr>> playerAgents { get; set; } = new List<Mem<IntPtr>>();
         private List<modelPos> models { get; set; } = new List<modelPos>();
+        private List<modelPos> in5m { get; set; }
         private int waiting = 0;
         public DataService(TrueFisherModule module)
         {
@@ -58,7 +60,8 @@ namespace BhModule.TrueFisher.Automatic
         void GetAgentAry()
         {
             waiting += 1;
-            var base1 = MemUtil.ReadMem(DataService.Handle, new IntPtr(0x2247CAEC840 + 0x98), 8).Parse<IntPtr>(); //6719af得rax
+            var root = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(Address, 0x26E9E00), 8, new List<int>() { 0x38 }).Parse<IntPtr>().value;
+            var base1 = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(root, 0x98), 8).Parse<IntPtr>(); //6719af得rax
             var firtAddr = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(base1.value, 0x60), 8).Parse<IntPtr>();
             var lastAddrOffset = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(base1.value, 0x6C), 8).Parse<int>().value * 8;
             //213949F8CF0
@@ -67,6 +70,7 @@ namespace BhModule.TrueFisher.Automatic
             var currentAddrInt = firtAddr.value.ToInt64();
             var lastAddrInt = lastAddr.ToInt64();
             agents.Clear();
+            playerAgents.Clear();
 
             while (currentAddrInt < lastAddrInt)
             {
@@ -76,6 +80,12 @@ namespace BhModule.TrueFisher.Automatic
                 if (target.value != IntPtr.Zero)
                 {
                     agents.Add(target);
+                    int type = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(target.value, 0x8 + 0x98), 4).Parse<int>().value;
+                    long a = type & 0xF0000000;
+                    if (a == 0x30000000)
+                    {
+                        playerAgents.Add(target);
+                    }
                 }
                 currentAddrInt = addr.ToInt64();
                 index += 1;
@@ -108,15 +118,15 @@ namespace BhModule.TrueFisher.Automatic
                     IntPtr agentPos = IntPtr.Add(validPtr, 0x28);
                     if (distance > 0)
                     {
-                        models.Add(new modelPos() { x = x, y = y, z = z, distance = distance, agentPos= agentPos , modelBase = modelBase });
+                        models.Add(new modelPos() { x = x, y = y, z = z, distance = distance, agentPos = agentPos, modelBase = modelBase });
 
                     }
                 }
-               
+
                 currentModelParent = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(currentModelParent, 0x30 + 0x8), 8).Parse<IntPtr>().value;
-            
+
             }
-            List<modelPos> nearest = models.FindAll(item => item.distance < 5);
+            in5m = models.FindAll(item => item.distance < 5);
             waiting -= 1;
         }
         void InjectDLL()
@@ -163,7 +173,7 @@ namespace BhModule.TrueFisher.Automatic
             var kstate = Keyboard.GetState();
             if (kstate.IsKeyDown(Keys.OemCloseBrackets))
             {
-                //GetAgentAry();
+                GetAgentAry();
                 GetModels();
             }
         }
