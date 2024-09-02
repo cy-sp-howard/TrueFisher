@@ -2,8 +2,10 @@
 #include <stdio.h>
 #include <fstream>
 #include <string>
+#include <unordered_map>
 #include "scanner.h"
 #include "hooker.h"
+#include "console.h"
 
 // 
 // 
@@ -39,6 +41,41 @@
 // [[[甲+98]+60]+[[[甲+98]+6C]*8] 最後值
 //[[甲 + 98] + 60 + 8 * N] 為有值
 //[[[甲 + 98] + 60 + 8 * N]]+5CA0 為釣魚地址
+//
+//
+// 滑鼠座標轉世界座標(英寸)
+// ViewAdvanceAgentSelect的參考+0xA 取得位置+0x3 follow 得位置再+300( "Gw2-64.exe"+279FD90)
+//
+//
+// ViewAdvanceModel
+//[exe + 2750658 + 8 + 8] 取得rdi初始位置 exe+Ea6e63
+//[rdi + 30 + 8] 為下一個 rdi
+//迴圈得值 rdi == base
+//
+//[base + 1b0] == r9   //exe+ef023c
+//[[base + 1b0]+ 8] == model base
+//
+//[[base + 1b0]+ 8] + 104 就是 pos 計算後的值
+//[r9 + 28] 為agent pos的位置
+//
+//
+// 掃描計算過物件位置與距離
+//(player 是頭的座標進來
+//[exe + 2750658 + 8 + 8] 取得rdi初始位置
+//[rdi + 30 + 8] 為下一個 rdi
+//迴圈得值 rdi == base
+//
+//[base + 1b0] == r9   //exe+ef023c
+//[[base + 1b0]+ 8] == model base
+//
+//[[base + 1b0]+ 8] + 104 就是 pos 計算後的值
+//[[base + 1b0]+ 8] + b4 為與本人的距離
+//[[base + 1b0]+ 28] 為agent pos(agent + 480)的位置
+//
+//
+//exe + DC89E0這是英尺轉公尺的func
+
+
 
 
 struct ADDRESS {
@@ -49,14 +86,18 @@ struct ADDRESS {
 	std::vector<uintptr_t> characterAry;
 	uintptr_t selfCharacterPtr = 0;
 };
+std::unordered_map<std::string, uintptr_t> staticAddrees;
+
 ADDRESS address;
+Console m_con;
 
 struct character {
 
 };
 
 void SetLangAddr() {
-	uintptr_t setLangFuncPtr = FollowRelativeAddress(FindReadonlyString("ValidateLanguage(language)") + 0x24);
+
+	uintptr_t setLangFuncPtr = staticAddrees["ValidateLanguage(language)"]; //504a90
 	auto getBase = (uintptr_t(__thiscall*)())FollowRelativeAddress(setLangFuncPtr + 0x9);
 	int addrOffset1 = *(char*)(setLangFuncPtr + 0x10);
 	int addrOffset2 = *(int*)(setLangFuncPtr + 0x13);
@@ -66,14 +107,15 @@ void SetLangAddr() {
 
 }
 void SetFishAddr() {
-	auto getBase = (uintptr_t(__thiscall*)())FollowRelativeAddress(FindReadonlyString("ViewAdvanceCharacter") + 0xA);
+
+	auto getBase = (uintptr_t(__thiscall*)())(staticAddrees["ViewAdvanceCharacter"]);
 	uintptr_t baseAddr = *(uintptr_t*)(getBase() + 0x98);
 	uintptr_t loopStartAddr = *(uintptr_t*)(baseAddr + 0x60);
 	uintptr_t loopEndAddr = loopStartAddr + (*(int*)(baseAddr + 0x6C)) * 8;
 	uintptr_t currentLoopAddr = loopStartAddr;
 	address.characterAry.clear();
 	address.selfCharacterPtr = 0;
-	while (currentLoopAddr <= loopEndAddr)
+	while (currentLoopAddr < loopEndAddr)
 	{
 		// addr 裡面是一個ptr ary ,index 1的ptr  call 他帶rcx好像會取得 該charater 狀態 含pos
 		uintptr_t* addr = (uintptr_t*)currentLoopAddr;
@@ -83,19 +125,24 @@ void SetFishAddr() {
 			//[[*ADDR + 08]+ 60]  (bool(__thiscall*)(uintptr_t))
 
 			//(*ADDR + 08)
-			auto isSelf = (bool(__thiscall*)(uintptr_t))(*((uintptr_t*)(*((uintptr_t*)(_addr + 0x8)) + 0x60)));
+			auto isPlayer = (bool(__thiscall*)(uintptr_t))(*((uintptr_t*)(*((uintptr_t*)(_addr + 0x8)) + 0x60)));
+	
 			//7FF712C496B0
-			if (isSelf(_addr + 0x8)) {
+			if (isPlayer(_addr + 0x8)) {
 				address.selfCharacterPtr = _addr;
 
 				uintptr_t __addr = *(uintptr_t*)_addr; //__addr 記憶體(可能是func)Ary 固定
 				auto getNextPtr = (uintptr_t (__thiscall*)(uintptr_t))(*((uintptr_t*)(__addr + 0x2C0))); 
 				auto _base = getNextPtr(_addr);
 				if (!_base) continue;
+				//[[_base + 05C78 + 28]+18]會得到釣魚計算
+				// _base + 05C78 + 28 內值會隨釣魚開始改變
 				address.fishPtr = *((uintptr_t*)(_base + 0x5CA0));
 
 				auto a = address.fishPtr + 0x18;
-				int b = 1;
+
+				m_con.printf("self %p\n", _addr);
+				m_con.printf("fish %p\n", a);
 
 			}
 
@@ -110,17 +157,20 @@ void SetFishAddr() {
 
 void __fastcall GameLoopCB() {
 	if (!address.ready) {
+		uintptr_t setLangFuncPtr = FollowRelativeAddress(FindReadonlyString("ValidateLanguage(language)") + 0x24);
+		staticAddrees["ValidateLanguage(language)"] = setLangFuncPtr;
+		uintptr_t getCharacterBasePtr = FollowRelativeAddress(FindReadonlyString("ViewAdvanceCharacter") + 0xA);
+		staticAddrees["ViewAdvanceCharacter"] = getCharacterBasePtr;
+
 		SetLangAddr();
+		m_con.create("debug");
 		address.ready = true;
+		m_con.printf("ready\n");
+
 	}
 	SetFishAddr();
 }
 
-template <typename T>
-T* Wrapper(T& target) {
-	T* result = &target;
-	return result;
-}
 
 Hooker m_hooker;
 static DWORD WINAPI SetHook(LPVOID param) {

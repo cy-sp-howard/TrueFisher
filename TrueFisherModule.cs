@@ -78,6 +78,8 @@ namespace BhModule.TrueFisher
         {
 
             var a = Parameters.DirectoriesManager.GetFullDirectoryPath("markers");
+
+            this.DataService.Update(gameTime);
             this.FishService.Update(gameTime);
             this.ControlService.Update(gameTime);
             this.DrawService.Update(gameTime);

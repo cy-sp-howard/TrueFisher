@@ -1,7 +1,11 @@
 ﻿using AsyncWindowsClipboard.Clipboard.Native;
 using BhModule.TrueFisher.Utils;
 using Blish_HUD;
+using Blish_HUD.ArcDps;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Graphics.PackedVector;
+using Microsoft.Xna.Framework.Input;
 using SharpDX.MediaFoundation;
 using System;
 using System.Collections.Generic;
@@ -9,6 +13,7 @@ using System.Configuration.Assemblies;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Resources;
 using System.Runtime.InteropServices;
@@ -40,16 +45,20 @@ namespace BhModule.TrueFisher.Automatic
         readonly string dllName = "TruefisherAgent.dll";
         private IntPtr _injectAddress;
         public IntPtr InjectAddress { get => _injectAddress; }
+
+        private List<Mem<IntPtr>> agents { get; set; } = new List<Mem<IntPtr>>();
+        private List<modelPos> models { get; set; } = new List<modelPos>();
+        private int waiting = 0;
         public DataService(TrueFisherModule module)
         {
             this.module = module;
-            Test();
             //InjectDLL();
             //GameService.GameIntegration.Gw2Instance.Gw2Started += delegate { InjectDLL(); };
         }
-        void Test()
+        void GetAgentAry()
         {
-            var base1 = MemUtil.ReadMem(DataService.Handle, new IntPtr(0x26E5B828290 + 0x98), 8).Parse<IntPtr>();
+            waiting += 1;
+            var base1 = MemUtil.ReadMem(DataService.Handle, new IntPtr(0x2247CAEC840 + 0x98), 8).Parse<IntPtr>(); //6719af得rax
             var firtAddr = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(base1.value, 0x60), 8).Parse<IntPtr>();
             var lastAddrOffset = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(base1.value, 0x6C), 8).Parse<int>().value * 8;
             //213949F8CF0
@@ -57,23 +66,58 @@ namespace BhModule.TrueFisher.Automatic
             var index = 0;
             var currentAddrInt = firtAddr.value.ToInt64();
             var lastAddrInt = lastAddr.ToInt64();
-            List<Mem<IntPtr>> results = new List<Mem<IntPtr>>();
+            agents.Clear();
 
             while (currentAddrInt < lastAddrInt)
             {
                 var addr = IntPtr.Add(firtAddr.value, 8 * index);
                 var target = MemUtil.ReadMem(DataService.Handle, addr, 8).Parse<IntPtr>();
-       
+
                 if (target.value != IntPtr.Zero)
                 {
-                    results.Add(target);
+                    agents.Add(target);
                 }
                 currentAddrInt = addr.ToInt64();
                 index += 1;
             }
 
-   
-            Trace.WriteLine("ss");
+
+            waiting -= 1;
+        }
+        void GetModels()
+        {
+
+            waiting += 1;
+            models.Clear();
+            IntPtr firstModelParent = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(Address, 0x2750658 + 0x8 + 0x8), 0x8).Parse<IntPtr>().value;
+            IntPtr currentModelParent = firstModelParent;
+            int currentLoop = 0;
+            while (currentModelParent != IntPtr.Zero)
+            {
+                currentLoop += 1;
+                IntPtr validPtr = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(currentModelParent, 0x1b0), 0x8).Parse<IntPtr>().value;
+                if (validPtr != IntPtr.Zero)
+                {
+                    IntPtr modelBasePtr = IntPtr.Add(validPtr, 0x8);
+                    IntPtr modelBase = MemUtil.ReadMem(DataService.Handle, modelBasePtr, 0x8).Parse<IntPtr>().value;
+                    float x = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(modelBase, 0x104), 0x4).Parse<float>().value;
+                    float y = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(modelBase, 0x108), 0x4).Parse<float>().value;
+                    float z = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(modelBase, 0x10C), 0x4).Parse<float>().value;
+                    float distance = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(modelBase, 0xb4), 0x4).Parse<float>().value;
+
+                    IntPtr agentPos = IntPtr.Add(validPtr, 0x28);
+                    if (distance > 0)
+                    {
+                        models.Add(new modelPos() { x = x, y = y, z = z, distance = distance, agentPos= agentPos , modelBase = modelBase });
+
+                    }
+                }
+               
+                currentModelParent = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(currentModelParent, 0x30 + 0x8), 8).Parse<IntPtr>().value;
+            
+            }
+            List<modelPos> nearest = models.FindAll(item => item.distance < 5);
+            waiting -= 1;
         }
         void InjectDLL()
         {
@@ -113,6 +157,16 @@ namespace BhModule.TrueFisher.Automatic
                 }
             }
         }
+        public void Update(GameTime gameTime)
+        {
+            if (waiting > 0) return;
+            var kstate = Keyboard.GetState();
+            if (kstate.IsKeyDown(Keys.OemCloseBrackets))
+            {
+                //GetAgentAry();
+                GetModels();
+            }
+        }
         public void Unload()
         {
             EjectDLL();
@@ -121,6 +175,15 @@ namespace BhModule.TrueFisher.Automatic
 
     }
 
+    public class modelPos
+    {
+        public float x;
+        public float y;
+        public float z;
+        public float distance;
+        public IntPtr agentPos;
+        public IntPtr modelBase;
+    }
     public static class FishMem
     {
         public static readonly MemTrail BaseMemAddr = new(0x027A2D38, [0x10, 0x20, 0x8, 0x8, 0x0, 0x108]);
