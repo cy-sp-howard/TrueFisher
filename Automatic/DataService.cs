@@ -2,6 +2,7 @@
 using BhModule.TrueFisher.Utils;
 using Blish_HUD;
 using Blish_HUD.ArcDps;
+using Blish_HUD.Gw2Mumble;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Graphics.PackedVector;
@@ -46,8 +47,8 @@ namespace BhModule.TrueFisher.Automatic
         private IntPtr _injectAddress;
         public IntPtr InjectAddress { get => _injectAddress; }
 
-        private List<Mem<IntPtr>> agents { get; set; } = new List<Mem<IntPtr>>();
-        private List<Mem<IntPtr>> playerAgents { get; set; } = new List<Mem<IntPtr>>();
+        private List<Mem<IntPtr>> characters { get; set; } = new List<Mem<IntPtr>>();
+        private List<Mem<IntPtr>> playerCharacters { get; set; } = new List<Mem<IntPtr>>();
         private List<modelPos> models { get; set; } = new List<modelPos>();
         private List<modelPos> in5m { get; set; }
         private int waiting = 0;
@@ -57,7 +58,7 @@ namespace BhModule.TrueFisher.Automatic
             //InjectDLL();
             //GameService.GameIntegration.Gw2Instance.Gw2Started += delegate { InjectDLL(); };
         }
-        void GetAgentAry()
+        void GetCharacterAry()
         {
             waiting += 1;
             var root = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(Address, 0x26E9E00), 8, new List<int>() { 0x38 }).Parse<IntPtr>().value;
@@ -69,22 +70,27 @@ namespace BhModule.TrueFisher.Automatic
             var index = 0;
             var currentAddrInt = firtAddr.value.ToInt64();
             var lastAddrInt = lastAddr.ToInt64();
-            agents.Clear();
-            playerAgents.Clear();
+            characters.Clear();
+            playerCharacters.Clear();
 
             while (currentAddrInt < lastAddrInt)
             {
                 var addr = IntPtr.Add(firtAddr.value, 8 * index);
                 var target = MemUtil.ReadMem(DataService.Handle, addr, 8).Parse<IntPtr>();
+               
 
                 if (target.value != IntPtr.Zero)
                 {
-                    agents.Add(target);
-                    int type = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(target.value, 0x8 + 0x98), 4).Parse<int>().value;
-                    long a = type & 0xF0000000;
-                    if (a == 0x30000000)
+                    float x = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(target.value, 0x480), 4).Parse<float>().value;
+                    if(x != 0 && Math.Abs(x) > 0.01)
                     {
-                        playerAgents.Add(target);
+                        characters.Add(target);
+                    }
+                    int type = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(target.value, 0x8 + 0x98), 4).Parse<int>().value;
+                    long _type = type & 0xF0000000;
+                    if (_type == 0x30000000)
+                    {
+                        playerCharacters.Add(target);
                     }
                 }
                 currentAddrInt = addr.ToInt64();
@@ -115,10 +121,10 @@ namespace BhModule.TrueFisher.Automatic
                     float z = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(modelBase, 0x10C), 0x4).Parse<float>().value;
                     float distance = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(modelBase, 0xb4), 0x4).Parse<float>().value;
 
-                    IntPtr agentPos = IntPtr.Add(validPtr, 0x28);
+                    IntPtr characterPosAddr = IntPtr.Add(validPtr, 0x28);
                     if (distance > 0)
                     {
-                        models.Add(new modelPos() { x = x, y = y, z = z, distance = distance, agentPos = agentPos, modelBase = modelBase });
+                        models.Add(new modelPos() { x = x, y = y, z = z, distance = distance, characterPosAddr = characterPosAddr, modelBase = modelBase ,modelParent = currentModelParent });
 
                     }
                 }
@@ -173,7 +179,7 @@ namespace BhModule.TrueFisher.Automatic
             var kstate = Keyboard.GetState();
             if (kstate.IsKeyDown(Keys.OemCloseBrackets))
             {
-                GetAgentAry();
+                GetCharacterAry();
                 GetModels();
             }
         }
@@ -191,8 +197,9 @@ namespace BhModule.TrueFisher.Automatic
         public float y;
         public float z;
         public float distance;
-        public IntPtr agentPos;
+        public IntPtr characterPosAddr;
         public IntPtr modelBase;
+        public IntPtr modelParent;
     }
     public static class FishMem
     {
