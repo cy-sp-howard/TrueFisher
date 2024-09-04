@@ -49,6 +49,7 @@ namespace BhModule.TrueFisher.Automatic
 
         private List<Mem<IntPtr>> characters { get; set; } = new List<Mem<IntPtr>>();
         private List<Mem<IntPtr>> playerCharacters { get; set; } = new List<Mem<IntPtr>>();
+        private List<Mem<IntPtr>> agents { get; set; } = new List<Mem<IntPtr>>();
         private List<modelPos> models { get; set; } = new List<modelPos>();
         private List<modelPos> in5m { get; set; }
         private int waiting = 0;
@@ -58,7 +59,7 @@ namespace BhModule.TrueFisher.Automatic
             //InjectDLL();
             //GameService.GameIntegration.Gw2Instance.Gw2Started += delegate { InjectDLL(); };
         }
-        void GetCharacterAry()
+        void GetCharacters()
         {
             waiting += 1;
             var root = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(Address, 0x26E9E00), 8, new List<int>() { 0x38 }).Parse<IntPtr>().value;
@@ -77,12 +78,12 @@ namespace BhModule.TrueFisher.Automatic
             {
                 var addr = IntPtr.Add(firtAddr.value, 8 * index);
                 var target = MemUtil.ReadMem(DataService.Handle, addr, 8).Parse<IntPtr>();
-               
+
 
                 if (target.value != IntPtr.Zero)
                 {
                     float x = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(target.value, 0x480), 4).Parse<float>().value;
-                    if(x != 0 && Math.Abs(x) > 0.01)
+                    if (x != 0 && Math.Abs(x) > 0.01)
                     {
                         characters.Add(target);
                     }
@@ -124,7 +125,7 @@ namespace BhModule.TrueFisher.Automatic
                     IntPtr characterPosAddr = IntPtr.Add(validPtr, 0x28);
                     if (distance > 0)
                     {
-                        models.Add(new modelPos() { x = x, y = y, z = z, distance = distance, characterPosAddr = characterPosAddr, modelBase = modelBase ,modelParent = currentModelParent });
+                        models.Add(new modelPos() { x = x, y = y, z = z, distance = distance, characterPosAddr = characterPosAddr, modelBase = modelBase, modelParent = currentModelParent });
 
                     }
                 }
@@ -133,6 +134,27 @@ namespace BhModule.TrueFisher.Automatic
 
             }
             in5m = models.FindAll(item => item.distance < 5);
+            waiting -= 1;
+        }
+        void GetAgents()
+        {
+            waiting += 1;
+            agents.Clear();
+            IntPtr firstAgentAddressPtr = IntPtr.Add(Address, 0x249CE90 + 0x68 + 0x8);
+            IntPtr agentMaxCountPtr = IntPtr.Add(Address, 0x249CE90 + 0x68 + 0x14);
+            int max = MemUtil.ReadMem(DataService.Handle, agentMaxCountPtr, 0x4).Parse<int>().value;
+            IntPtr firstAgentAddress = MemUtil.ReadMem(DataService.Handle, firstAgentAddressPtr, 0x8).Parse<IntPtr>().value;
+
+            for (int i = 0; i < max; i++)
+            {
+                IntPtr CurrentAgentAddress = IntPtr.Add(firstAgentAddress, 0x8 * i);
+                var agent = MemUtil.ReadMem(DataService.Handle, CurrentAgentAddress, 0x8).Parse<IntPtr>();
+                if (agent.value != IntPtr.Zero)
+                {
+                    agents.Add(agent);
+                }
+            }
+
             waiting -= 1;
         }
         void InjectDLL()
@@ -179,8 +201,9 @@ namespace BhModule.TrueFisher.Automatic
             var kstate = Keyboard.GetState();
             if (kstate.IsKeyDown(Keys.OemCloseBrackets))
             {
-                GetCharacterAry();
+                GetCharacters();
                 GetModels();
+                GetAgents();
             }
         }
         public void Unload()
