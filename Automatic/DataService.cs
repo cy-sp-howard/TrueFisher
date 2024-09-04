@@ -48,8 +48,11 @@ namespace BhModule.TrueFisher.Automatic
         public IntPtr InjectAddress { get => _injectAddress; }
 
         private List<Mem<IntPtr>> characters { get; set; } = new List<Mem<IntPtr>>();
+        private List<Mem<IntPtr>> characterAgents { get; set; } = new List<Mem<IntPtr>>();
+        private List<Mem<IntPtr>> itemAgents { get; set; } = new List<Mem<IntPtr>>();
         private List<Mem<IntPtr>> playerCharacters { get; set; } = new List<Mem<IntPtr>>();
         private List<Mem<IntPtr>> agents { get; set; } = new List<Mem<IntPtr>>();
+        private List<Mem<IntPtr>> gadgetAgents { get; set; } = new List<Mem<IntPtr>>();
         private List<modelPos> models { get; set; } = new List<modelPos>();
         private List<modelPos> in5m { get; set; }
         private int waiting = 0;
@@ -87,6 +90,7 @@ namespace BhModule.TrueFisher.Automatic
                     {
                         characters.Add(target);
                     }
+                    // 有哪些type
                     int type = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(target.value, 0x8 + 0x98), 4).Parse<int>().value;
                     long _type = type & 0xF0000000;
                     if (_type == 0x30000000)
@@ -140,6 +144,9 @@ namespace BhModule.TrueFisher.Automatic
         {
             waiting += 1;
             agents.Clear();
+            characterAgents.Clear();
+            gadgetAgents.Clear();
+            itemAgents.Clear();
             IntPtr firstAgentAddressPtr = IntPtr.Add(Address, 0x249CE90 + 0x68 + 0x8);
             IntPtr agentMaxCountPtr = IntPtr.Add(Address, 0x249CE90 + 0x68 + 0x14);
             int max = MemUtil.ReadMem(DataService.Handle, agentMaxCountPtr, 0x4).Parse<int>().value;
@@ -152,6 +159,20 @@ namespace BhModule.TrueFisher.Automatic
                 if (agent.value != IntPtr.Zero)
                 {
                     agents.Add(agent);
+                    int type = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(agent.value, 0x8 + 0xb8), 0x8, new List<int> { 0x38, 0x8 }).Parse<int>().value;
+                    if (type == 0)
+                    {
+                        characterAgents.Add(agent);
+                    }
+                    else if (type == 0xA) {
+
+                        gadgetAgents.Add(agent);
+                    }
+                    else if (type == 0xF)
+                    {
+
+                        itemAgents.Add(agent);
+                    }
                 }
             }
 
