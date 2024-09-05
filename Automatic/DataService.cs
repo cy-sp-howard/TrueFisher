@@ -56,6 +56,8 @@ namespace BhModule.TrueFisher.Automatic
         private List<Mem<IntPtr>> gadgetAttackTargetAgents { get; set; } = new List<Mem<IntPtr>>();
 
         private List<modelPos> models { get; set; } = new List<modelPos>();
+        private List<modelPos> fishModels { get; set; } = new List<modelPos>();
+        private List<modelPos> fish2Models { get; set; } = new List<modelPos>();
         private List<modelPos> in5m { get; set; }
         private int waiting = 0;
         public DataService(TrueFisherModule module)
@@ -112,6 +114,8 @@ namespace BhModule.TrueFisher.Automatic
 
             waiting += 1;
             models.Clear();
+            fishModels.Clear();
+            fish2Models.Clear();
             IntPtr firstModelParent = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(Address, 0x2750658 + 0x8 + 0x8), 0x8).Parse<IntPtr>().value;
             IntPtr currentModelParent = firstModelParent;
             int currentLoop = 0;
@@ -131,8 +135,17 @@ namespace BhModule.TrueFisher.Automatic
                     IntPtr characterPosAddr = IntPtr.Add(validPtr, 0x28);
                     if (distance > 0)
                     {
-                        models.Add(new modelPos() { x = x, y = y, z = z, distance = distance, characterPosAddr = characterPosAddr, modelBase = modelBase, modelParent = currentModelParent });
+                        var data = new modelPos() { x = x, y = y, z = z, distance = distance, characterPosAddr = characterPosAddr, modelBase = modelBase, modelParent = currentModelParent };
 
+                        models.Add(data);
+                        if (MemUtil.ReadMem(DataService.Handle, IntPtr.Add(modelBase, 0x2A0), 0x4).Parse<int>().value == 0x48)
+                        {
+                            fishModels.Add(data);
+                        }
+                        if (MemUtil.ReadMem(DataService.Handle, IntPtr.Add(modelBase, 0x2AC), 0x4).Parse<int>().value == 0x1C2)
+                        {
+                            fish2Models.Add(data);
+                        }
                     }
                 }
 
@@ -200,7 +213,8 @@ namespace BhModule.TrueFisher.Automatic
                     var _m_a = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(a.value, 0x8 + 0xb8), 0x8, new List<int> { 0x38 }).Parse<long>().value;
                     return _m_a == m_a.ToInt64();
                 });
-                if (found != null) {
+                if (found != null)
+                {
                     Trace.WriteLine("found");
                 }
             }

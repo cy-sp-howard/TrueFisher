@@ -79,7 +79,7 @@
 
 
 struct ADDRESS {
-	std::string ImHere = "Im Here";
+	std::string ImHere;
 	bool ready = false;
 	uintptr_t langPtr = 0;
 	uintptr_t fishPtr = 0;
@@ -177,6 +177,7 @@ static DWORD WINAPI SetHook(LPVOID param) {
 
 	uintptr_t funcPtr = FollowRelativeAddress(FindReadonlyString("ViewAdvanceDevice") + 0xa);
 	uintptr_t cbPtrSpace = FollowRelativeAddress(funcPtr + 0x3);
+	address.ImHere = "HERE";
 	m_hooker.hookVT(*(uintptr_t*)cbPtrSpace, 0, (uintptr_t)GameLoopCB);
 
 
