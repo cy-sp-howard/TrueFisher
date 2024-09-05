@@ -56,7 +56,7 @@
 //[[base + 1b0]+ 8] == model base
 //
 //[[base + 1b0]+ 8] + 104 就是 pos 計算後的值
-//[r9 + 28] 為agent pos的位置
+//[r9 + 28] 為model pos的位置
 //
 //
 // 掃描計算過物件位置與距離
@@ -70,11 +70,12 @@
 //
 //[[base + 1b0]+ 8] + 104 就是 pos 計算後的值
 //[[base + 1b0]+ 8] + b4 為與本人的距離
-//[[base + 1b0]+ 28] 為agent pos(agent + 480)的位置
+//[[base + 1b0]+ 28] 為原始 pos(character + 480)的位置
 //
 //
 //exe + DC89E0這是英尺轉公尺的func
-
+//
+//Gw2-64.exe+46F310  去得名字 (invalid character name)
 
 
 
@@ -98,8 +99,11 @@ struct character {
 void SetLangAddr() {
 
 	uintptr_t setLangFuncPtr = staticAddrees["ValidateLanguage(language)"]; //504a90
+	//Gw2-64.exe+504A98 - call Gw2-64.exe+2432B0	
 	auto getBase = (uintptr_t(__thiscall*)())FollowRelativeAddress(setLangFuncPtr + 0x9);
+	//Gw2-64.exe+504A9D - mov rdx,[rax+50]
 	int addrOffset1 = *(char*)(setLangFuncPtr + 0x10);
+	//Gw2-64.exe+504AA1 - mov [rdx+00000334],ebx
 	int addrOffset2 = *(int*)(setLangFuncPtr + 0x13);
 	uintptr_t basePtr = getBase();
 	uintptr_t base2Ptr = *(uintptr_t*)(basePtr + addrOffset1);
@@ -157,7 +161,8 @@ void SetFishAddr() {
 
 void __fastcall GameLoopCB() {
 	if (!address.ready) {
-		uintptr_t setLangFuncPtr = FollowRelativeAddress(FindReadonlyString("ValidateLanguage(language)") + 0x24);
+		// Gw2-64.exe+5C252D - call Gw2-64.exe+504A90
+		uintptr_t setLangFuncPtr = FollowRelativeAddress(FindReadonlyString("ValidateLanguage(language)") + 0x24); 
 		staticAddrees["ValidateLanguage(language)"] = setLangFuncPtr;
 		uintptr_t getCharacterBasePtr = FollowRelativeAddress(FindReadonlyString("ViewAdvanceCharacter") + 0xA);
 		staticAddrees["ViewAdvanceCharacter"] = getCharacterBasePtr;
