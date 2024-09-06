@@ -71,8 +71,6 @@ namespace BhModule.TrueFisher.Automatic
             SetUILang();
             GameService.GameIntegration.Gw2Instance.Gw2Started += delegate { SetUILang(); };
 
-
-
         }
         public void Update(GameTime gameTime)
         {
@@ -87,7 +85,7 @@ namespace BhModule.TrueFisher.Automatic
         }
         public void Unload()
         {
-
+            SetUILang(originUILanguage);
         }
 
         public void MoveTargetToScreenCenter(Vector2 screenPos)
@@ -109,7 +107,7 @@ namespace BhModule.TrueFisher.Automatic
             Vector2 resolution = GameService.Graphics.Resolution.ToVector2();
             if (holePos.X < 0 || holePos.Y < 0 || holePos.X > resolution.X || holePos.Y > resolution.Y)
             {
-                MoveTargetToScreenCenter(new (holePos.X,holePos.Y));
+                MoveTargetToScreenCenter(new(holePos.X, holePos.Y));
             }
             Mouse.SetPosition(((int)holePos.X), ((int)holePos.Y));
             Keyboard.Stroke(Skill_1);
@@ -153,14 +151,19 @@ namespace BhModule.TrueFisher.Automatic
             module.FishService.StateChanged -= OnFishStateChange;
             module.FishService.ProgressionChanged -= OnFishProgressionChange;
         }
-        public void SetUILang()
+        public void SetUILang(Lang val = Lang.UNKNOWN)
         {
+
             if (originUILanguage == Lang.UNKNOWN)
             {
                 originUILanguage = (Lang)DataService.Read<int>(SettingMem.Language).value;
                 if (originUILanguage == Lang.CN) originUILanguage = Lang.ENG;
             }
-            Lang val = module.Settings.ChineseUI.Value ? Lang.CN : originUILanguage;
+            if(val == Lang.UNKNOWN)
+            {
+                val = module.Settings.ChineseUI.Value ? Lang.CN : originUILanguage;
+            }
+
             DataService.Write(SettingMem.Language, BitConverter.GetBytes((int)val));
         }
 

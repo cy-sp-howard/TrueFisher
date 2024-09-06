@@ -41,10 +41,10 @@ namespace BhModule.TrueFisher.Automatic
         {
             return MemUtil.WriteMem(DataService.Handle, trail.StartAddress, val, trail.Offset);
         }
+        static public DLLInject AgentDLL = new DLLInject();
 
         private TrueFisherModule module;
 
-        private DLLInject dllInject = new DLLInject();
 
         private List<Mem<IntPtr>> characters { get; set; } = new List<Mem<IntPtr>>();
         private List<Mem<IntPtr>> characterAgents { get; set; } = new List<Mem<IntPtr>>();
@@ -62,8 +62,8 @@ namespace BhModule.TrueFisher.Automatic
         public DataService(TrueFisherModule module)
         {
             this.module = module;
-            dllInject.InjectDLL();
-            GameService.GameIntegration.Gw2Instance.Gw2Started += delegate { dllInject.InjectDLL(); };
+            AgentDLL.InjectDLL();
+            GameService.GameIntegration.Gw2Instance.Gw2Started += delegate { AgentDLL.InjectDLL(); };
         }
         void GetCharacters()
         {
@@ -234,7 +234,7 @@ namespace BhModule.TrueFisher.Automatic
         }
         public void Unload()
         {
-            dllInject.EjectDLL();
+            AgentDLL.EjectDLL();
         }
 
     }
@@ -279,6 +279,7 @@ namespace BhModule.TrueFisher.Automatic
             MemUtil.WaitForSingleObject(thread, 0xFFFFFFFF);
             checkInjected();
             MemUtil.VirtualFreeEx(process.Handle, dllPathPtr, 0, 0x8000);
+
 
         }
         public void EjectDLL()
@@ -326,7 +327,13 @@ namespace BhModule.TrueFisher.Automatic
     }
     public static class SettingMem
     {
-        public static readonly MemTrail Language = new(0x26EDB00, [0x38, 0x50, 0x334]);
+        public static MemTrail Language
+        {
+            get
+            {
+                return new(0xBDA40, [0]) { BaseAddress = DataService.AgentDLL.BaseAddress };
+            }
+        }
         private static MemTrail KeyBindTemplate(int val) => new(0x26EFE28, [val * 0x8 + 0x8, 0x34]);
         public static int SecondKeyOffset = 0x50;
         public static readonly MemTrail Skill_1 = KeyBindTemplate(0x222);
@@ -344,7 +351,8 @@ namespace BhModule.TrueFisher.Automatic
 
     public class MemTrail
     {
-        public IntPtr StartAddress { get => IntPtr.Add(DataService.Address, FirstOffset); }
+        public IntPtr StartAddress { get => IntPtr.Add(BaseAddress, FirstOffset); }
+        public IntPtr BaseAddress = DataService.Address;
         public IReadOnlyList<int> Offset { get => _offset.AsReadOnly(); }
         public int FirstOffset { get; private set; }
         private List<int> _offset = new();
