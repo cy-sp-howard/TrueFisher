@@ -1,12 +1,7 @@
 ﻿#include "pch.h"
-#include <stdio.h>
-#include <fstream>
 #include <string>
-#include <unordered_map>
-#include <vector>
+#include "main.h"
 #include "scanner.h"
-#include "hooker.h"
-#include "console.h"
 
 // 
 // 
@@ -80,98 +75,25 @@
 
 
 
-struct ADDRESS {
-	std::string ImHere;
-	bool ready = false;
-	uintptr_t* hookTarget = 0;
-	uintptr_t replacedCBPtr = 0;
-	uintptr_t langPtr = 0;
-	uintptr_t fishPtr = 0;
-	std::vector<uintptr_t> characterAry;
-	uintptr_t selfCharacterPtr = 0;
-};
 
-struct character {
-
-};
-
-std::unordered_map<std::string, uintptr_t> staticAddrees;
-std::vector<uintptr_t> wrapper;
 ADDRESS address;
-Console m_con;
+Console console;
+std::unordered_map<std::string, uintptr_t> staticAddrees;
 
+struct {
+	uintptr_t* target = 0;
+	uintptr_t replaced = 0;
+} hook;
+std::vector<uintptr_t> wrapper;
 
-void SetLangAddr() {
-
-	uintptr_t setLangFuncPtr = staticAddrees["ValidateLanguage(language)"]; //504a90
-	//Gw2-64.exe+504A98 - call Gw2-64.exe+2432B0	
-	auto getBase = (uintptr_t(__thiscall*)())FollowRelativeAddress(setLangFuncPtr + 0x9);
-	//Gw2-64.exe+504A9D - mov rdx,[rax+50]
-	int addrOffset1 = *(char*)(setLangFuncPtr + 0x10);
-	//Gw2-64.exe+504AA1 - mov [rdx+00000334],ebx
-	int addrOffset2 = *(int*)(setLangFuncPtr + 0x13);
-	uintptr_t basePtr = getBase();
-	uintptr_t base2Ptr = *(uintptr_t*)(basePtr + addrOffset1);
-	address.langPtr = base2Ptr + addrOffset2;
-
-}
-void SetFishAddr() {
-
-	auto getBase = (uintptr_t(__thiscall*)())(staticAddrees["ViewAdvanceCharacter"]);
-	uintptr_t baseAddr = *(uintptr_t*)(getBase() + 0x98);
-	uintptr_t loopStartAddr = *(uintptr_t*)(baseAddr + 0x60);
-	uintptr_t loopEndAddr = loopStartAddr + (*(int*)(baseAddr + 0x6C)) * 8;
-	uintptr_t currentLoopAddr = loopStartAddr;
-	address.characterAry.clear();
-	address.selfCharacterPtr = 0;
-	while (currentLoopAddr < loopEndAddr)
-	{
-		// addr 裡面是一個ptr ary ,index 1的ptr  call 他帶rcx好像會取得 該charater 狀態 含pos
-		uintptr_t* addr = (uintptr_t*)currentLoopAddr;
-		if (*addr) {
-			address.characterAry.push_back(*addr);
-			uintptr_t _addr = (uintptr_t)*addr;  //_addr動態的
-			//[[*ADDR + 08]+ 60]  (bool(__thiscall*)(uintptr_t))
-
-			//(*ADDR + 08)
-			auto isPlayer = (bool(__thiscall*)(uintptr_t))(*((uintptr_t*)(*((uintptr_t*)(_addr + 0x8)) + 0x60)));
-
-			//7FF712C496B0
-			if (isPlayer(_addr + 0x8)) {
-				address.selfCharacterPtr = _addr;
-
-				uintptr_t __addr = *(uintptr_t*)_addr; //__addr 記憶體(可能是func)Ary 固定
-				auto getNextPtr = (uintptr_t(__thiscall*)(uintptr_t))(*((uintptr_t*)(__addr + 0x2C0)));
-				auto _base = getNextPtr(_addr);
-				if (!_base) continue;
-				//[[_base + 05C78 + 28]+18]會得到釣魚計算
-				// _base + 05C78 + 28 內值會隨釣魚開始改變
-				address.fishPtr = *((uintptr_t*)(_base + 0x5CA0));
-
-				auto a = address.fishPtr + 0x18;
-
-				m_con.printf("self %p\n", _addr);
-				m_con.printf("fish %p\n", a);
-
-			}
-
-		}
-
-		currentLoopAddr += 8;
-	}
-
-
-
-}
-
-uintptr_t getPtr(uintptr_t addr) {
+uintptr_t GetPtr(uintptr_t addr) {
 	wrapper.push_back(addr);
 
 	long long index = wrapper.size() - 1;
 	return 	(uintptr_t)(&(wrapper.data()[index]));
 }
 void __fastcall GameLoopCB(uintptr_t ptr, int time, uintptr_t zero) {
-	uintptr_t replacedCB = *((uintptr_t*)(address.replacedCBPtr));
+	uintptr_t replacedCB = *((uintptr_t*)(hook.replaced));
 	((uintptr_t(__thiscall*)(uintptr_t, int, uintptr_t))replacedCB)(ptr, time, zero);
 	if (!address.ready) {
 		// Gw2-64.exe+5C252D - call Gw2-64.exe+504A90
@@ -181,33 +103,28 @@ void __fastcall GameLoopCB(uintptr_t ptr, int time, uintptr_t zero) {
 		staticAddrees["ViewAdvanceCharacter"] = getCharacterBasePtr;
 
 		SetLangAddr();
-		m_con.create("debug");
 		address.ready = true;
-		m_con.printf("ready\n");
+		console.printf("ready\n");
 
 	}
 	SetFishAddr();
 }
-
 static DWORD WINAPI SetHook(LPVOID param) {
+	console.create("Debug");
 	address.ImHere = "HERE";
 	//Gw2-64.exe+671A3D - call Gw2-64.exe+1381DB0
 	uintptr_t funcPtr = FollowRelativeAddress(FindReadonlyStringRef("ViewAdvanceDevice") + 0xa);
 	uintptr_t resultPtr = FollowRelativeAddress(funcPtr + 0x3);
 	uintptr_t* cbPtrPtr = *(uintptr_t**)resultPtr;
 	if (cbPtrPtr == 0) return -1;
-	address.hookTarget = cbPtrPtr;
-	address.replacedCBPtr = *cbPtrPtr;
-	*cbPtrPtr = getPtr((uintptr_t)GameLoopCB);
-
-
+	hook.target = cbPtrPtr;
+	hook.replaced = *cbPtrPtr;
+	*cbPtrPtr = GetPtr((uintptr_t)GameLoopCB);
 	return 0;
 }
 
 void mount()
 {
-
-
 	HANDLE hThread = CreateThread(NULL, 0, SetHook, NULL, 0, NULL);
 	if (hThread == NULL)
 	{
@@ -219,8 +136,8 @@ void mount()
 	}
 }
 void unmount() {
-	if (address.replacedCBPtr == 0) return;
-	*(address.hookTarget) = address.replacedCBPtr;
+	if (hook.replaced == 0) return;
+	*(hook.target) = hook.replaced;
 }
 
 

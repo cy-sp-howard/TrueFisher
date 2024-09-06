@@ -23,7 +23,7 @@ Console_PARAMETERS Console::GetDefaultParameters()
 	parameters.cellsYBuffer = 500;
 	parameters.bgColor = RGB(0, 0, 0);
 	parameters.textColor = RGB(192, 192, 192);
-	parameters.closemenu = false;
+	parameters.closemenu = true;
 	return parameters;
 }
 
@@ -213,9 +213,10 @@ LRESULT Console::wndProc(HWND hWnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		}
 
 		// set font in edit controls to system monospaced font
+		HFONT hFont =  CreateFont(32, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DRAFT_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Consolas");
 		HGDIOBJ fixedFont = GetStockObject(SYSTEM_FIXED_FONT);
-		SendMessageA(m_hEditOut, WM_SETFONT, reinterpret_cast<WPARAM>(fixedFont), MAKELPARAM(FALSE, 0));
-		SendMessageA(m_hEditIn, WM_SETFONT, reinterpret_cast<WPARAM>(fixedFont), MAKELPARAM(FALSE, 0));
+		SendMessageA(m_hEditOut, WM_SETFONT, reinterpret_cast<WPARAM>(hFont), MAKELPARAM(FALSE, 0));
+		SendMessageA(m_hEditIn, WM_SETFONT, reinterpret_cast<WPARAM>(hFont), MAKELPARAM(FALSE, 0));
 
 		// get edit control raw buffer
 		m_rawBuffer.setBuffer(reinterpret_cast<HLOCAL>(SendMessageA(m_hEditOut, EM_GETHANDLE, 0, 0)));
