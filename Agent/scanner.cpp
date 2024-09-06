@@ -189,7 +189,7 @@ const std::vector<MemoryRegion>& GetCodeRegions(const std::string& moduleName)
 	return lut[moduleName];
 }
 
-std::vector<uintptr_t> FindReadonlyStringByAry(const std::vector<std::string>& strings, const std::string& moduleName)
+std::vector<uintptr_t> FindReadonlyStringRefByAry(const std::vector<std::string>& strings, const std::string& moduleName)
 {
 	std::vector<uintptr_t> results(strings.size());
 	int stringsFound = 0;
@@ -200,7 +200,7 @@ std::vector<uintptr_t> FindReadonlyStringByAry(const std::vector<std::string>& s
 		uintptr_t found = 0;
 		try
 		{
-			found = FindReadonlyString(str, moduleName);
+			found = FindReadonlyStringRef(str, moduleName);
 		}
 		catch (...)
 		{
@@ -222,9 +222,9 @@ std::vector<uintptr_t> FindReadonlyStringByAry(const std::vector<std::string>& s
 	return results;
 }
 
-std::map<std::string, uintptr_t> FindReadonlyStringByAry2(const std::vector<std::string>& strings, const std::string& moduleName)
+std::map<std::string, uintptr_t> FindReadonlyStringRefByAry2(const std::vector<std::string>& strings, const std::string& moduleName)
 {
-	auto results = FindReadonlyStringByAry(strings, moduleName);
+	auto results = FindReadonlyStringRefByAry(strings, moduleName);
 
 	std::map<std::string, uintptr_t> resultMap;
 	for (size_t i = 0; i < results.size(); i++)
@@ -384,7 +384,7 @@ static const uint8_t* boyermoore(const uint8_t* txt, const size_t n, const uint8
 }
 
 
-uintptr_t FindReadonlyString(const std::string& str, const std::string& moduleName, int instance)
+uintptr_t FindReadonlyStringRef(const std::string& str, const std::string& moduleName, int instance)
 {
 	if (!moduleMap.count(moduleName))
 		moduleMap[moduleName] = GetModuleByName(moduleName);

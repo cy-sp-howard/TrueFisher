@@ -43,6 +43,6 @@ struct MemoryRegion
 
 uintptr_t FindPatternByModule(const std::string& pattern, const std::string& moduleName = "", int instance = 0);
 uintptr_t FollowRelativeAddress(uintptr_t adr, int trail = 0);
-uintptr_t FindReadonlyString(const std::string& str, const std::string& moduleName = "", int instance = 0);
-std::vector<uintptr_t> FindReadonlyStringByAry(const std::vector<std::string>& strings, const std::string& moduleName = "");
-std::map<std::string, uintptr_t> FindReadonlyStringByAry2(const std::vector<std::string>& strings, const std::string& moduleName = "");
+uintptr_t FindReadonlyStringRef(const std::string& str, const std::string& moduleName = "", int instance = 0);
+std::vector<uintptr_t> FindReadonlyStringRefByAry(const std::vector<std::string>& strings, const std::string& moduleName = "");
+std::map<std::string, uintptr_t> FindReadonlyStringRefByAry2(const std::vector<std::string>& strings, const std::string& moduleName = "");

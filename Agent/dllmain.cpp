@@ -3,6 +3,7 @@
 #include <fstream>
 #include <string>
 #include <unordered_map>
+#include <vector>
 #include "scanner.h"
 #include "hooker.h"
 #include "console.h"
@@ -82,19 +83,23 @@
 struct ADDRESS {
 	std::string ImHere;
 	bool ready = false;
+	uintptr_t* hookTarget = 0;
+	uintptr_t replacedCBPtr = 0;
 	uintptr_t langPtr = 0;
 	uintptr_t fishPtr = 0;
 	std::vector<uintptr_t> characterAry;
 	uintptr_t selfCharacterPtr = 0;
 };
-std::unordered_map<std::string, uintptr_t> staticAddrees;
-
-ADDRESS address;
-Console m_con;
 
 struct character {
 
 };
+
+std::unordered_map<std::string, uintptr_t> staticAddrees;
+std::vector<uintptr_t> wrapper;
+ADDRESS address;
+Console m_con;
+
 
 void SetLangAddr() {
 
@@ -130,13 +135,13 @@ void SetFishAddr() {
 
 			//(*ADDR + 08)
 			auto isPlayer = (bool(__thiscall*)(uintptr_t))(*((uintptr_t*)(*((uintptr_t*)(_addr + 0x8)) + 0x60)));
-	
+
 			//7FF712C496B0
 			if (isPlayer(_addr + 0x8)) {
 				address.selfCharacterPtr = _addr;
 
 				uintptr_t __addr = *(uintptr_t*)_addr; //__addr 記憶體(可能是func)Ary 固定
-				auto getNextPtr = (uintptr_t (__thiscall*)(uintptr_t))(*((uintptr_t*)(__addr + 0x2C0))); 
+				auto getNextPtr = (uintptr_t(__thiscall*)(uintptr_t))(*((uintptr_t*)(__addr + 0x2C0)));
 				auto _base = getNextPtr(_addr);
 				if (!_base) continue;
 				//[[_base + 05C78 + 28]+18]會得到釣魚計算
@@ -159,12 +164,20 @@ void SetFishAddr() {
 
 }
 
-void __fastcall GameLoopCB() {
+uintptr_t getPtr(uintptr_t addr) {
+	wrapper.push_back(addr);
+
+	long long index = wrapper.size() - 1;
+	return 	(uintptr_t)(&(wrapper.data()[index]));
+}
+void __fastcall GameLoopCB(uintptr_t ptr, int time, uintptr_t zero) {
+	uintptr_t replacedCB = *((uintptr_t*)(address.replacedCBPtr));
+	((uintptr_t(__thiscall*)(uintptr_t, int, uintptr_t))replacedCB)(ptr, time, zero);
 	if (!address.ready) {
 		// Gw2-64.exe+5C252D - call Gw2-64.exe+504A90
-		uintptr_t setLangFuncPtr = FollowRelativeAddress(FindReadonlyString("ValidateLanguage(language)") + 0x24); 
+		uintptr_t setLangFuncPtr = FollowRelativeAddress(FindReadonlyStringRef("ValidateLanguage(language)") + 0x24);
 		staticAddrees["ValidateLanguage(language)"] = setLangFuncPtr;
-		uintptr_t getCharacterBasePtr = FollowRelativeAddress(FindReadonlyString("ViewAdvanceCharacter") + 0xA);
+		uintptr_t getCharacterBasePtr = FollowRelativeAddress(FindReadonlyStringRef("ViewAdvanceCharacter") + 0xA);
 		staticAddrees["ViewAdvanceCharacter"] = getCharacterBasePtr;
 
 		SetLangAddr();
@@ -176,20 +189,22 @@ void __fastcall GameLoopCB() {
 	SetFishAddr();
 }
 
-
-Hooker m_hooker;
 static DWORD WINAPI SetHook(LPVOID param) {
-
-	uintptr_t funcPtr = FollowRelativeAddress(FindReadonlyString("ViewAdvanceDevice") + 0xa);
-	uintptr_t cbPtrSpace = FollowRelativeAddress(funcPtr + 0x3);
 	address.ImHere = "HERE";
-	m_hooker.hookVT(*(uintptr_t*)cbPtrSpace, 0, (uintptr_t)GameLoopCB);
+	//Gw2-64.exe+671A3D - call Gw2-64.exe+1381DB0
+	uintptr_t funcPtr = FollowRelativeAddress(FindReadonlyStringRef("ViewAdvanceDevice") + 0xa);
+	uintptr_t resultPtr = FollowRelativeAddress(funcPtr + 0x3);
+	uintptr_t* cbPtrPtr = *(uintptr_t**)resultPtr;
+	if (cbPtrPtr == 0) return -1;
+	address.hookTarget = cbPtrPtr;
+	address.replacedCBPtr = *cbPtrPtr;
+	*cbPtrPtr = getPtr((uintptr_t)GameLoopCB);
 
 
 	return 0;
 }
 
-bool run()
+void mount()
 {
 
 
@@ -200,10 +215,32 @@ bool run()
 	}
 	else
 	{
-		// Thread will be exited by suiciding with FreeLibraryAndExitThread.
 		CloseHandle(hThread);
 	}
-	return true;
+}
+void unmount() {
+	if (address.replacedCBPtr == 0) return;
+	*(address.hookTarget) = address.replacedCBPtr;
 }
 
-bool IsRun = run();
+
+BOOL APIENTRY DllMain(HMODULE hModule,
+	DWORD  ul_reason_for_call,
+	LPVOID lpReserved
+)
+{
+	switch (ul_reason_for_call)
+	{
+	case DLL_PROCESS_ATTACH:
+		mount();
+		break;
+	case DLL_THREAD_ATTACH:
+		break;
+	case DLL_THREAD_DETACH:
+		break;
+	case DLL_PROCESS_DETACH:
+		unmount();
+		break;
+	}
+	return TRUE;
+}

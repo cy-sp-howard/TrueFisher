@@ -43,9 +43,8 @@ namespace BhModule.TrueFisher.Automatic
         }
 
         private TrueFisherModule module;
-        readonly string dllName = "TruefisherAgent.dll";
-        private IntPtr _injectAddress;
-        public IntPtr InjectAddress { get => _injectAddress; }
+
+        private DLLInject dllInject = new DLLInject();
 
         private List<Mem<IntPtr>> characters { get; set; } = new List<Mem<IntPtr>>();
         private List<Mem<IntPtr>> characterAgents { get; set; } = new List<Mem<IntPtr>>();
@@ -63,8 +62,8 @@ namespace BhModule.TrueFisher.Automatic
         public DataService(TrueFisherModule module)
         {
             this.module = module;
-            //InjectDLL();
-            //GameService.GameIntegration.Gw2Instance.Gw2Started += delegate { InjectDLL(); };
+            dllInject.InjectDLL();
+            GameService.GameIntegration.Gw2Instance.Gw2Started += delegate { dllInject.InjectDLL(); };
         }
         void GetCharacters()
         {
@@ -219,44 +218,8 @@ namespace BhModule.TrueFisher.Automatic
                 }
             }
         }
-        void InjectDLL()
-        {
-            //var _handler = Process.GetProcessesByName("powershell")[0].Handle;
 
-            byte[] dllBytes = Resource.Agent_debug;
-            string dllFullPath = Path.GetFullPath(dllName);
-            byte[] dllFullPath_bytes = Encoding.ASCII.GetBytes(dllFullPath);
-            try
-            {
-                File.WriteAllBytes(dllFullPath, dllBytes);
-            }
-            catch { }
-            IntPtr dll = MemUtil.VirtualAllocEx(Handle, IntPtr.Zero, dllFullPath_bytes.Length, 0x1000, 0x04);
 
-            int bytesWritten;
-            MemUtil.WriteProcessMemory(Handle, dll, dllFullPath_bytes, dllFullPath_bytes.Length, out bytesWritten);
-            IntPtr loadFunc = MemUtil.GetProcAddress(MemUtil.GetModuleHandle("kernel32"), "LoadLibraryA");
-
-            IntPtr thread = MemUtil.CreateRemoteThread(Handle, IntPtr.Zero, 0, loadFunc, dll, 0, IntPtr.Zero);
-            MemUtil.WaitForSingleObject(thread, 0xFFFFFFFF);
-
-        }
-        void EjectDLL()
-        {
-            if (Process == null) return;
-            foreach (ProcessModule module in Process.Modules)
-            {
-                if (module.ModuleName == dllName)
-                {
-
-                    IntPtr freeFunc = MemUtil.GetProcAddress(MemUtil.GetModuleHandle("kernel32"), "FreeLibrary");
-
-                    IntPtr thread = MemUtil.CreateRemoteThread(Handle, IntPtr.Zero, 0, freeFunc, module.BaseAddress, 0, IntPtr.Zero);
-                    MemUtil.WaitForSingleObject(thread, 0xFFFFFFFF);
-                    return;
-                }
-            }
-        }
         public void Update(GameTime gameTime)
         {
             if (waiting > 0) return;
@@ -271,12 +234,75 @@ namespace BhModule.TrueFisher.Automatic
         }
         public void Unload()
         {
-            EjectDLL();
-
+            dllInject.EjectDLL();
         }
 
     }
 
+    public class DLLInject
+    {
+        readonly string dllName = "TruefisherAgent.dll";
+        public IntPtr BaseAddress { get => baseAddress; }
+        IntPtr baseAddress;
+        Process process
+        {
+            get => Process.GetProcessById(DataService.Process.Id);
+        }
+
+        IntPtr initDLLFile()
+        {
+            byte[] dllBytes = Resource.Agent_debug;
+            string dllFullPath = Path.GetFullPath(dllName);
+            byte[] dllFullPath_bytes = Encoding.ASCII.GetBytes(dllFullPath);
+            try
+            {
+                File.WriteAllBytes(dllFullPath, dllBytes);
+            }
+            catch { }
+
+
+            IntPtr dllPathPtr = MemUtil.VirtualAllocEx(process.Handle, IntPtr.Zero, dllFullPath_bytes.Length, 0x1000, 0x04);
+            int bytesWritten;
+            MemUtil.WriteProcessMemory(process.Handle, dllPathPtr, dllFullPath_bytes, dllFullPath_bytes.Length, out bytesWritten);
+            return dllPathPtr;
+        }
+        public void InjectDLL()
+        {
+            if (process == null || baseAddress != IntPtr.Zero) return;
+            checkInjected(); // if false，check it, because probably default value
+            if (baseAddress != IntPtr.Zero) return;
+            IntPtr dllPathPtr = initDLLFile();
+            IntPtr handle = process.Handle;
+            IntPtr loadFunc = MemUtil.GetProcAddress(MemUtil.GetModuleHandle("kernel32"), "LoadLibraryA");
+
+            IntPtr thread = MemUtil.CreateRemoteThread(handle, IntPtr.Zero, 0, loadFunc, dllPathPtr, 0, IntPtr.Zero);
+            MemUtil.WaitForSingleObject(thread, 0xFFFFFFFF);
+            checkInjected();
+            MemUtil.VirtualFreeEx(process.Handle, dllPathPtr, 0, 0x8000);
+
+        }
+        public void EjectDLL()
+        {
+            if (process == null) return;
+            if (baseAddress == IntPtr.Zero) return;
+            IntPtr handle = process.Handle;
+            IntPtr freeFunc = MemUtil.GetProcAddress(MemUtil.GetModuleHandle("kernel32"), "FreeLibrary");
+            IntPtr thread = MemUtil.CreateRemoteThread(handle, IntPtr.Zero, 0, freeFunc, baseAddress, 0, IntPtr.Zero);
+            MemUtil.WaitForSingleObject(thread, 0xFFFFFFFF);
+
+        }
+        void checkInjected()
+        {
+            foreach (ProcessModule module in process.Modules)
+            {
+                if (module.ModuleName == dllName)
+                {
+                    baseAddress = module.BaseAddress;
+                    return;
+                }
+            }
+        }
+    }
     public class modelPos
     {
         public float x;
@@ -313,6 +339,8 @@ namespace BhModule.TrueFisher.Automatic
         public static readonly MemTrail MoveForward = KeyBindTemplate(0x49B);
         public static readonly MemTrail MoveBackward = KeyBindTemplate(0x5A0);
     }
+
+
 
     public class MemTrail
     {
