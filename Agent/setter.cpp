@@ -4,11 +4,11 @@
 
 extern ADDRESS address;
 extern Console console;
-extern std::unordered_map<std::string, uintptr_t> staticAddrees;
+extern std::unordered_map<std::string, uintptr_t> staticAddress;
 
 void SetLangAddr() {
 
-	uintptr_t setLangFuncPtr = staticAddrees["ValidateLanguage(language)"]; //504a90
+	uintptr_t setLangFuncPtr = staticAddress["ValidateLanguage(language)"]; //504a90
 	//Gw2-64.exe+504A98 - call Gw2-64.exe+2432B0	
 	auto getBase = (uintptr_t(__thiscall*)())FollowRelativeAddress(setLangFuncPtr + 0x9);
 	//Gw2-64.exe+504A9D - mov rdx,[rax+50]
@@ -24,7 +24,7 @@ void SetLangAddr() {
 }
 void SetFishAddr() {
 
-	auto getBase = (uintptr_t(__thiscall*)())(staticAddrees["ViewAdvanceCharacter"]);
+	auto getBase = (uintptr_t(__thiscall*)())(staticAddress["ViewAdvanceCharacter"]);
 	uintptr_t baseAddr = *(uintptr_t*)(getBase() + 0x98);
 	uintptr_t loopStartAddr = *(uintptr_t*)(baseAddr + 0x60);
 	uintptr_t loopEndAddr = loopStartAddr + (*(int*)(baseAddr + 0x6C)) * 8;

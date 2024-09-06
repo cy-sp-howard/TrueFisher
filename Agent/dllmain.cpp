@@ -78,7 +78,7 @@
 
 ADDRESS address;
 Console console;
-std::unordered_map<std::string, uintptr_t> staticAddrees;
+std::unordered_map<std::string, uintptr_t> staticAddress;
 
 struct {
 	uintptr_t* target = 0;
@@ -98,9 +98,9 @@ void __fastcall GameLoopCB(uintptr_t ptr, int time, uintptr_t zero) {
 	if (!address.ready) {
 		// Gw2-64.exe+5C252D - call Gw2-64.exe+504A90
 		uintptr_t setLangFuncPtr = FollowRelativeAddress(FindReadonlyStringRef("ValidateLanguage(language)") + 0x24);
-		staticAddrees["ValidateLanguage(language)"] = setLangFuncPtr;
+		staticAddress["ValidateLanguage(language)"] = setLangFuncPtr;
 		uintptr_t getCharacterBasePtr = FollowRelativeAddress(FindReadonlyStringRef("ViewAdvanceCharacter") + 0xA);
-		staticAddrees["ViewAdvanceCharacter"] = getCharacterBasePtr;
+		staticAddress["ViewAdvanceCharacter"] = getCharacterBasePtr;
 
 		SetLangAddr();
 		address.ready = true;
