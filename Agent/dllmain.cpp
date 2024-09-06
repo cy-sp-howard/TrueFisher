@@ -30,6 +30,10 @@
 // 
 // 85 C0 75 F7 (gw2 module) while的根
 //
+// /[[rax+5c78]+28] call character第一個func array+2c0
+// Gw2-64.exe+128424D - call qword ptr [rax+000002C0]
+//Gw2 - 64.exe + 12B2187 - lea rcx, [rsi + 00005C78]
+//Gw2-64.exe+12DCE18 - mov rcx,[rbx+28]
 // 12dce26 準被call finsh ready func
 // 掃agent?
 //  Gw2-64.exe+2432B0 { 取得"甲" }      
@@ -107,7 +111,7 @@ void __fastcall GameLoopCB(uintptr_t ptr, int time, uintptr_t zero) {
 		console.printf("ready\n");
 
 	}
-	SetFishAddr();
+	//SetFishAddr();
 }
 static DWORD WINAPI SetHook(LPVOID param) {
 	console.create("Debug");

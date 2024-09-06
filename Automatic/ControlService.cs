@@ -68,8 +68,7 @@ namespace BhModule.TrueFisher.Automatic
         public ControlService(TrueFisherModule module)
         {
             this.module = module;
-            SetUILang();
-            GameService.GameIntegration.Gw2Instance.Gw2Started += delegate { SetUILang(); };
+            DataService.AgentDLL.Ready += delegate { SetUILang(); };
 
         }
         public void Update(GameTime gameTime)
@@ -153,7 +152,7 @@ namespace BhModule.TrueFisher.Automatic
         }
         public void SetUILang(Lang val = Lang.UNKNOWN)
         {
-
+            if(DataService.AgentDLL.BaseAddress == IntPtr.Zero) return;
             if (originUILanguage == Lang.UNKNOWN)
             {
                 originUILanguage = (Lang)DataService.Read<int>(SettingMem.Language).value;

@@ -217,6 +217,10 @@ namespace BhModule.TrueFisher.Utils
             {
                 return (Mem<TT>)(object)new Mem<IntPtr>() { address = address, value = new IntPtr(BitConverter.ToInt64(val, 0)) };
             }
+            else if (typeof(TT) == typeof(bool))
+            {
+                return (Mem<TT>)(object)new Mem<bool>() { address = address, value = BitConverter.ToBoolean(val, 0) };
+            }
             throw new NotImplementedException("Not match type");
         }
     }

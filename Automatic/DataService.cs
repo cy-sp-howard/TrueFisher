@@ -2,6 +2,7 @@
 using BhModule.TrueFisher.Utils;
 using Blish_HUD;
 using Blish_HUD.ArcDps;
+using Blish_HUD.ArcDps.Models;
 using Blish_HUD.Gw2Mumble;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -21,6 +22,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
 using TmfLib.Pathable;
 
 namespace BhModule.TrueFisher.Automatic
@@ -242,11 +244,14 @@ namespace BhModule.TrueFisher.Automatic
     public class DLLInject
     {
         readonly string dllName = "TruefisherAgent.dll";
+
+        public event EventHandler<ChangeEventArgs<bool>> Ready;
         public IntPtr BaseAddress { get => baseAddress; }
         IntPtr baseAddress;
+        System.Timers.Timer checkReadyTimer;
         Process process
         {
-            get => Process.GetProcessById(DataService.Process.Id);
+            get => DataService.Process == null ? null : Process.GetProcessById(DataService.Process.Id);
         }
 
         IntPtr initDLLFile()
@@ -298,10 +303,27 @@ namespace BhModule.TrueFisher.Automatic
             {
                 if (module.ModuleName == dllName)
                 {
+                    if (baseAddress == IntPtr.Zero) checkReady();
+
                     baseAddress = module.BaseAddress;
                     return;
                 }
             }
+        }
+        void checkReady()
+        {
+            checkReadyTimer = new System.Timers.Timer(3000);
+            checkReadyTimer.Elapsed += onReady;
+
+            checkReadyTimer.AutoReset = true;
+            checkReadyTimer.Enabled = true;
+        }
+        void onReady(object sender, EventArgs e)
+        {
+            bool isReady = DataService.Read<bool>(SettingMem.DLLReady).value;
+            if (!isReady) return;
+            Ready?.Invoke(this, new(true, false));
+            checkReadyTimer.Stop();
         }
     }
     public class modelPos
@@ -327,13 +349,9 @@ namespace BhModule.TrueFisher.Automatic
     }
     public static class SettingMem
     {
-        public static MemTrail Language
-        {
-            get
-            {
-                return new(0xBDA40, [0]) { BaseAddress = DataService.AgentDLL.BaseAddress };
-            }
-        }
+        public static MemTrail DLLReady => new(0xBDA38) { BaseAddress = DataService.AgentDLL.BaseAddress };
+        public static MemTrail Language => new(0xBDA40, [0]) { BaseAddress = DataService.AgentDLL.BaseAddress };
+        
         private static MemTrail KeyBindTemplate(int val) => new(0x26EFE28, [val * 0x8 + 0x8, 0x34]);
         public static int SecondKeyOffset = 0x50;
         public static readonly MemTrail Skill_1 = KeyBindTemplate(0x222);
