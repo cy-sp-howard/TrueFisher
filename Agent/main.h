@@ -4,8 +4,8 @@
 #include "console.h"
 
 struct ADDRESS {
-	std::string ImHere;
 	bool ready = false;
+	uintptr_t mapState = 0;
 	uintptr_t lang = 0;
 	uintptr_t fish = 0;
 	std::vector<uintptr_t> characterAry;
@@ -21,4 +21,6 @@ struct character {
 
 void SetLangAddr();
 void SetFishAddr();
+void SetMapStateAddr();
+void resetInstanceImpactedAddress();
 uintptr_t GetPtr(uintptr_t);

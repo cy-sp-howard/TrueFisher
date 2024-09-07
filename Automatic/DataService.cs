@@ -64,7 +64,7 @@ namespace BhModule.TrueFisher.Automatic
         public DataService(TrueFisherModule module)
         {
             this.module = module;
-            AgentDLL.InjectDLL();
+            if(GameService.GameIntegration.Gw2Instance.Gw2IsRunning) AgentDLL.InjectDLL();
             GameService.GameIntegration.Gw2Instance.Gw2Started += delegate { AgentDLL.InjectDLL(); };
         }
         void GetCharacters()
@@ -338,19 +338,19 @@ namespace BhModule.TrueFisher.Automatic
     }
     public static class FishMem
     {
-        public static readonly MemTrail BaseMemAddr = new(0x027A2D38, [0x10, 0x20, 0x8, 0x8, 0x0, 0x108]);
-        public static readonly MemTrail State = BaseMemAddr.AddOffset(0x68);
-        public static readonly MemTrail Fishing = BaseMemAddr.AddOffset(0x1A0);
-        public static readonly MemTrail Progression = BaseMemAddr.AddOffset(0x80);
-        public static readonly MemTrail FisPos = BaseMemAddr.AddOffset(0x84);
-        public static readonly MemTrail YellowBarWidth = BaseMemAddr.AddOffset(0x8C);
-        public static readonly MemTrail UserPos = BaseMemAddr.AddOffset(0x88);
-        public static readonly MemTrail InRange = BaseMemAddr.AddOffset(0x90);
+        public static  MemTrail BaseMemAddr => new(0xbea10 + 0x18) { BaseAddress = DataService.AgentDLL.BaseAddress };
+        public static  MemTrail State => BaseMemAddr.AddOffset(0x40);
+        public static  MemTrail Fishing => BaseMemAddr.AddOffset(0x178);
+        public static  MemTrail Progression => BaseMemAddr.AddOffset(0x58);
+        public static  MemTrail FisPos => BaseMemAddr.AddOffset(0x5C);
+        public static  MemTrail YellowBarWidth => BaseMemAddr.AddOffset(0x64);
+        public static  MemTrail UserPos => BaseMemAddr.AddOffset(0x60);
+        public static  MemTrail InRange => BaseMemAddr.AddOffset(0x68);
     }
     public static class SettingMem
     {
-        public static MemTrail DLLReady => new(0xBDA38) { BaseAddress = DataService.AgentDLL.BaseAddress };
-        public static MemTrail Language => new(0xBDA40, [0]) { BaseAddress = DataService.AgentDLL.BaseAddress };
+        public static MemTrail DLLReady => new(0xbea10) { BaseAddress = DataService.AgentDLL.BaseAddress };
+        public static MemTrail Language => new(0xbea10+0x10, [0]) { BaseAddress = DataService.AgentDLL.BaseAddress };
         
         private static MemTrail KeyBindTemplate(int val) => new(0x26EFE28, [val * 0x8 + 0x8, 0x34]);
         public static int SecondKeyOffset = 0x50;
@@ -391,7 +391,7 @@ namespace BhModule.TrueFisher.Automatic
         {
             List<int> n_offset = _offset.ToList();
             n_offset.AddRange(vals);
-            return new(FirstOffset, n_offset.ToArray());
+            return new(FirstOffset, n_offset.ToArray()) { BaseAddress = BaseAddress };
         }
     }
 }

@@ -76,10 +76,17 @@
 //exe + DC89E0這是英尺轉公尺的func
 //
 //Gw2-64.exe+46F310  去得名字 (invalid character name)
+//
+// 
+// [rcx+18]判斷是否load地圖 0e load  ,0f loaded
+// Gw2-64.exe+672763 - call Gw2-64.exe+6E15F0 得到rcx
+// Gw2-64.exe+6D8886 - F6 41 18 01           - test byte ptr [rcx+18],01
+// ViewAdvanceUi的參考 +0xA call實際位置  得到 result 
+// [result] 去此func 的實際位置+0x8 取得偏移
+// result+偏移 此位置可判斷load地圖
 
 
-
-
+EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 ADDRESS address;
 Console console;
 std::unordered_map<std::string, uintptr_t> staticAddress;
@@ -105,17 +112,34 @@ void __fastcall GameLoopCB(uintptr_t ptr, int time, uintptr_t zero) {
 		staticAddress["ValidateLanguage(language)"] = setLangFuncPtr;
 		uintptr_t getCharacterBasePtr = FollowRelativeAddress(FindReadonlyStringRef("ViewAdvanceCharacter") + 0xA);
 		staticAddress["ViewAdvanceCharacter"] = getCharacterBasePtr;
+		uintptr_t getSelfCharacterBasePtr = FollowRelativeAddress(FindReadonlyStringRef("!m_state.TestBits(FLAG_ENTER_GAME)") + 0x55);
+		staticAddress["!m_state.TestBits(FLAG_ENTER_GAME)"] = getSelfCharacterBasePtr;
+		uintptr_t getMapStateBasePtr = FollowRelativeAddress(FindReadonlyStringRef("ViewAdvanceUi") + 0xA);
+		staticAddress["ViewAdvanceUi"] = getMapStateBasePtr;
 
+
+		SetMapStateAddr();
 		SetLangAddr();
 		address.ready = true;
 		console.printf("ready\n");
 
 	}
-	//SetFishAddr();
+
+	if (address.mapState) {
+		char mapState = *(char*)address.mapState;
+		if (mapState == 0xF) {
+			if (address.fish == 0) SetFishAddr();
+		}
+		else {
+			resetInstanceImpactedAddress();
+		}
+	}
+
 }
 static DWORD WINAPI SetHook(LPVOID param) {
 	console.create("Debug");
-	address.ImHere = "HERE";
+	console.printf("dll base:%p\n", &__ImageBase);
+	console.printf("address offset:%X\n", (long long)(&address) - (long long)(&__ImageBase));
 	//Gw2-64.exe+671A3D - call Gw2-64.exe+1381DB0
 	uintptr_t funcPtr = FollowRelativeAddress(FindReadonlyStringRef("ViewAdvanceDevice") + 0xa);
 	uintptr_t resultPtr = FollowRelativeAddress(funcPtr + 0x3);
