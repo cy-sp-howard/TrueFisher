@@ -15,15 +15,12 @@ namespace BhModule.TrueFisher.Automatic
     public class PathService
     {
         private TrueFisherModule module;
-        public VirtualKeyShort MoveForward { get => GetGameBindButton(SettingMem.MoveForward); }
-        public VirtualKeyShort MoveBackward { get => GetGameBindButton(SettingMem.MoveBackward); }
-        public VirtualKeyShort TurnLeft { get => GetGameBindButton(SettingMem.TurnLeft); }
-        public VirtualKeyShort TurnRight { get => GetGameBindButton(SettingMem.TurnRight); }
+        public VirtualKeyShort MoveForward { get => ControlService.GetGameBindButton(SettingMem.MoveForward); }
+        public VirtualKeyShort MoveBackward { get => ControlService.GetGameBindButton(SettingMem.MoveBackward); }
+        public VirtualKeyShort TurnLeft { get => ControlService.GetGameBindButton(SettingMem.TurnLeft); }
+        public VirtualKeyShort TurnRight { get => ControlService.GetGameBindButton(SettingMem.TurnRight); }
 
-        static public Dictionary<VirtualKeyShort, VirtualKeyShort> GameKeyMap = new() {
-            {VirtualKeyShort.ACCEPT,VirtualKeyShort.RIGHT },
-            {VirtualKeyShort.NONCONVERT,VirtualKeyShort.LEFT },
-        };
+
         public Blish_HUD.Gw2Mumble.PlayerCharacter Player { get => GameService.Gw2Mumble.PlayerCharacter; }
         public PathService(TrueFisherModule module)
         {
@@ -45,25 +42,7 @@ namespace BhModule.TrueFisher.Automatic
             if (angle > 5) Keyboard.Stroke(TurnLeft);
             else if (angle < -5) Keyboard.Stroke(TurnRight);
         }
-        static public VirtualKeyShort GameKeyToVirtualKey(VirtualKeyShort key)
-        {
-            if (GameKeyMap.ContainsKey(key))
-            {
-                return GameKeyMap[key];
-            }
-            return key;
-        }
-        static public VirtualKeyShort GetGameBindButton(MemTrail offset)
-        {
-            Mem<short> result = DataService.Read<short>(offset);
-            if (result.value == 0)
-            {
-                int[] secondKeyOffsetAry = offset.Offset.ToArray();
-                secondKeyOffsetAry[secondKeyOffsetAry.Length - 1] = secondKeyOffsetAry[secondKeyOffsetAry.Length - 1] + SettingMem.SecondKeyOffset;
-                MemTrail secondKeyTrail = new(offset.FirstOffset, secondKeyOffsetAry);
-                return GameKeyToVirtualKey((VirtualKeyShort)DataService.Read<short>(secondKeyTrail).value);
-            }
-            return GameKeyToVirtualKey((VirtualKeyShort)result.value);
-        }
+
+
     }
 }

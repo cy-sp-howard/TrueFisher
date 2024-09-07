@@ -3,44 +3,12 @@
 #include "main.h"
 #include "scanner.h"
 
-// 
-// 
-// 
-// MatchIsAcceptable(m_match) 取參考此地址的function +0x13 得 call exe + 59da30 的地址
-//exe + 59da30(func) 取得以下資料(得基址的基值)
-//基址(EXE + 26ec0d0地址(分內值) + 50)跟偏移(EXE + 2B8A60(Func 188) 得出) 算出
-// call exe + 59da30 時 rdx 決定 EXE + 2B8A60取的值
-//也就是說 call exe + 59da30 時 rdx  會決定 基值得基質的值
-// 2B8A60 只有RCX RDX會影響其值
-//exe + 5a3a50 拿(基址的基指) + 10 取得基址
-//取得基址後 + 24 得案件位置
-// 
-// 
-// No valid case for switch variable 'EState' 取參考此地址的function +0x78 進入call目標地址 + D2 得(59c892 會取的偏移植)
-// 片例所有案件
-// exe 59c883開頭  遍例會取經過他好幾次取得計算值
-//59c892 會取的偏移植
-// 59c8d8 會取得(案件地址-24)
-// 98c8E5  比較案件地址內容內容是否為目標案件
-//若值找到 59c8ec 會跳轉到執行位置
-//59c95c 會再次取得地址
-//改地址 + 24 得到 按鈕地址
-// 推測用來遍例取得
+
+
 // 
 // 
 // 85 C0 75 F7 (gw2 module) while的根
 //
-// /[[rax+5c78]+28] call character第一個func array+2c0
-// Gw2-64.exe+128424D - call qword ptr [rax+000002C0]
-//Gw2 - 64.exe + 12B2187 - lea rcx, [rsi + 00005C78]
-//Gw2-64.exe+12DCE18 - mov rcx,[rbx+28]
-// 12dce26 準被call finsh ready func
-// 掃agent?
-//  Gw2-64.exe+2432B0 { 取得"甲" }      
-// [ [甲+98]+60]  初始值
-// [[[甲+98]+60]+[[[甲+98]+6C]*8] 最後值
-//[[甲 + 98] + 60 + 8 * N] 為有值
-//[[[甲 + 98] + 60 + 8 * N]]+5CA0 為釣魚地址
 //
 //
 // 滑鼠座標轉世界座標(英寸)
@@ -77,13 +45,6 @@
 //
 //Gw2-64.exe+46F310  去得名字 (invalid character name)
 //
-// 
-// [rcx+18]判斷是否load地圖 0e load  ,0f loaded
-// Gw2-64.exe+672763 - call Gw2-64.exe+6E15F0 得到rcx
-// Gw2-64.exe+6D8886 - F6 41 18 01           - test byte ptr [rcx+18],01
-// ViewAdvanceUi的參考 +0xA call實際位置  得到 result 
-// [result] 去此func 的實際位置+0x8 取得偏移
-// result+偏移 此位置可判斷load地圖
 
 
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
@@ -103,6 +64,18 @@ uintptr_t GetPtr(uintptr_t addr) {
 	long long index = wrapper.size() - 1;
 	return 	(uintptr_t)(&(wrapper.data()[index]));
 }
+void mapLoadedCall() {
+
+	if (address.mapState) {
+		char mapState = *(char*)address.mapState;
+		if (mapState == 0xF) {
+			if (address.fish == 0) SetFishAddr();
+		}
+		else {
+			resetInstanceImpactedAddress();
+		}
+	}
+}
 void __fastcall GameLoopCB(uintptr_t ptr, int time, uintptr_t zero) {
 	uintptr_t replacedCB = *((uintptr_t*)(hook.replaced));
 	((uintptr_t(__thiscall*)(uintptr_t, int, uintptr_t))replacedCB)(ptr, time, zero);
@@ -116,24 +89,20 @@ void __fastcall GameLoopCB(uintptr_t ptr, int time, uintptr_t zero) {
 		staticAddress["!m_state.TestBits(FLAG_ENTER_GAME)"] = getSelfCharacterBasePtr;
 		uintptr_t getMapStateBasePtr = FollowRelativeAddress(FindReadonlyStringRef("ViewAdvanceUi") + 0xA);
 		staticAddress["ViewAdvanceUi"] = getMapStateBasePtr;
-
+		uintptr_t keyBindLoopStart = FindReadonlyStringRef("No valid case for switch variable 'EState'") + 0x71;
+		staticAddress["No valid case for switch variable 'EState'"] = keyBindLoopStart;
+		uintptr_t keyBindInvalid = FindReadonlyStringRef("No valid case for switch variable 'EBind'");
+		staticAddress["No valid case for switch variable 'EBind'"] = keyBindInvalid;
 
 		SetMapStateAddr();
 		SetLangAddr();
+		SetKeyBindsAddr();
 		address.ready = true;
 		console.printf("ready\n");
 
 	}
+	mapLoadedCall();
 
-	if (address.mapState) {
-		char mapState = *(char*)address.mapState;
-		if (mapState == 0xF) {
-			if (address.fish == 0) SetFishAddr();
-		}
-		else {
-			resetInstanceImpactedAddress();
-		}
-	}
 
 }
 static DWORD WINAPI SetHook(LPVOID param) {

@@ -42,10 +42,14 @@ namespace BhModule.TrueFisher.Automatic
         private bool _enable = false;
 
         private Blish_HUD.Modules.Module pathingModule { get => GameService.Module.Modules.ToList().Find(i => i.ModuleInstance.Name == "Pathing")?.ModuleInstance; }
-        public VirtualKeyShort Skill_1 { get => PathService.GetGameBindButton(SettingMem.Skill_1); }
-        public VirtualKeyShort Skill_3 { get => PathService.GetGameBindButton(SettingMem.Skill_3); }
-        public VirtualKeyShort Interact { get => PathService.GetGameBindButton(SettingMem.Interact); }
-        public VirtualKeyShort Anchor { get => PathService.GetGameBindButton(SettingMem.Anchor); }
+        static public Dictionary<VirtualKeyShort, VirtualKeyShort> GameKeyMap = new() {
+            {VirtualKeyShort.ACCEPT,VirtualKeyShort.RIGHT },
+            {VirtualKeyShort.NONCONVERT,VirtualKeyShort.LEFT },
+        };
+        public VirtualKeyShort Skill_1 { get => GetGameBindButton(SettingMem.Skill_1); }
+        public VirtualKeyShort Skill_3 { get => GetGameBindButton(SettingMem.Skill_3); }
+        public VirtualKeyShort Interact { get => GetGameBindButton(SettingMem.Interact); }
+        public VirtualKeyShort Anchor { get => GetGameBindButton(SettingMem.Anchor); }
 
 
 
@@ -152,20 +156,39 @@ namespace BhModule.TrueFisher.Automatic
         }
         public void SetUILang(Lang val = Lang.UNKNOWN)
         {
-            if(DataService.AgentDLL.BaseAddress == IntPtr.Zero) return;
+            if (DataService.AgentDLL.BaseAddress == IntPtr.Zero) return;
             if (originUILanguage == Lang.UNKNOWN)
             {
                 originUILanguage = (Lang)DataService.Read<int>(SettingMem.Language).value;
                 if (originUILanguage == Lang.CN) originUILanguage = Lang.ENG;
             }
-            if(val == Lang.UNKNOWN)
+            if (val == Lang.UNKNOWN)
             {
                 val = module.Settings.ChineseUI.Value ? Lang.CN : originUILanguage;
             }
 
             DataService.Write(SettingMem.Language, BitConverter.GetBytes((int)val));
         }
-
-
+        static public VirtualKeyShort GetGameBindButton(int index)
+        {
+            Mem<short> result = DataService.Read<short>(SettingMem.KeyBind(index));
+            if (result.value == 0)
+            {
+                Mem<short> result2 = DataService.Read<short>(SettingMem.KeyBind(index, 1));
+                return GameKeyToVirtualKey((VirtualKeyShort)result2.value);
+            }
+            return GameKeyToVirtualKey((VirtualKeyShort)result.value);
+        }
+        static public VirtualKeyShort GameKeyToVirtualKey(VirtualKeyShort key)
+        {
+            if (GameKeyMap.ContainsKey(key))
+            {
+                return GameKeyMap[key];
+            }
+            return key;
+        }
     }
+
+
 }
+

@@ -64,7 +64,7 @@ namespace BhModule.TrueFisher.Automatic
         public DataService(TrueFisherModule module)
         {
             this.module = module;
-            if(GameService.GameIntegration.Gw2Instance.Gw2IsRunning) AgentDLL.InjectDLL();
+            if (GameService.GameIntegration.Gw2Instance.Gw2IsRunning) AgentDLL.InjectDLL();
             GameService.GameIntegration.Gw2Instance.Gw2Started += delegate { AgentDLL.InjectDLL(); };
         }
         void GetCharacters()
@@ -247,6 +247,7 @@ namespace BhModule.TrueFisher.Automatic
 
         public event EventHandler<ChangeEventArgs<bool>> Ready;
         public IntPtr BaseAddress { get => baseAddress; }
+        public IntPtr AddressData { get => IntPtr.Add(baseAddress, 0xC0A10); }
         IntPtr baseAddress;
         System.Timers.Timer checkReadyTimer;
         Process process
@@ -338,31 +339,30 @@ namespace BhModule.TrueFisher.Automatic
     }
     public static class FishMem
     {
-        public static  MemTrail BaseMemAddr => new(0xbea10 + 0x18) { BaseAddress = DataService.AgentDLL.BaseAddress };
-        public static  MemTrail State => BaseMemAddr.AddOffset(0x40);
-        public static  MemTrail Fishing => BaseMemAddr.AddOffset(0x178);
-        public static  MemTrail Progression => BaseMemAddr.AddOffset(0x58);
-        public static  MemTrail FisPos => BaseMemAddr.AddOffset(0x5C);
-        public static  MemTrail YellowBarWidth => BaseMemAddr.AddOffset(0x64);
-        public static  MemTrail UserPos => BaseMemAddr.AddOffset(0x60);
-        public static  MemTrail InRange => BaseMemAddr.AddOffset(0x68);
+        public static MemTrail BaseMemAddr => new(0x18) { BaseAddress = DataService.AgentDLL.AddressData };
+        public static MemTrail State => BaseMemAddr.AddOffset(0x40);
+        public static MemTrail Fishing => BaseMemAddr.AddOffset(0x178);
+        public static MemTrail Progression => BaseMemAddr.AddOffset(0x58);
+        public static MemTrail FisPos => BaseMemAddr.AddOffset(0x5C);
+        public static MemTrail YellowBarWidth => BaseMemAddr.AddOffset(0x64);
+        public static MemTrail UserPos => BaseMemAddr.AddOffset(0x60);
+        public static MemTrail InRange => BaseMemAddr.AddOffset(0x68);
     }
     public static class SettingMem
     {
-        public static MemTrail DLLReady => new(0xbea10) { BaseAddress = DataService.AgentDLL.BaseAddress };
-        public static MemTrail Language => new(0xbea10+0x10, [0]) { BaseAddress = DataService.AgentDLL.BaseAddress };
-        
-        private static MemTrail KeyBindTemplate(int val) => new(0x26EFE28, [val * 0x8 + 0x8, 0x34]);
-        public static int SecondKeyOffset = 0x50;
-        public static readonly MemTrail Skill_1 = KeyBindTemplate(0x222);
-        public static readonly MemTrail Skill_2 = KeyBindTemplate(0x372);
-        public static readonly MemTrail Skill_3 = KeyBindTemplate(0x438);
-        public static readonly MemTrail Interact = KeyBindTemplate(0x156);
-        public static readonly MemTrail Anchor = KeyBindTemplate(0x303);
-        public static readonly MemTrail TurnLeft = KeyBindTemplate(0x555);
-        public static readonly MemTrail TurnRight = KeyBindTemplate(0x1CE);
-        public static readonly MemTrail MoveForward = KeyBindTemplate(0x49B);
-        public static readonly MemTrail MoveBackward = KeyBindTemplate(0x5A0);
+        public static MemTrail DLLReady => new(0) { BaseAddress = DataService.AgentDLL.AddressData };
+        public static MemTrail Language => new(0x10, [0]) { BaseAddress = DataService.AgentDLL.AddressData };
+
+        public static MemTrail KeyBind(int index, int bindIndex = 0) => new(bindIndex == 0 ? 0x20 : 0x28, [index * 8, 0]) { BaseAddress = DataService.AgentDLL.AddressData };
+        public static readonly int Skill_1 = 0x15;
+        public static readonly int Skill_2 = 0x16;
+        public static readonly int Skill_3 = 0x17;
+        public static readonly int Interact = 0x6D;
+        public static readonly int Anchor = 0x1E;
+        public static readonly int TurnLeft = 2;
+        public static readonly int TurnRight = 3;
+        public static readonly int MoveForward = 0;
+        public static readonly int MoveBackward = 1;
     }
 
 
