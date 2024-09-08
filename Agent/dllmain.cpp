@@ -106,17 +106,27 @@ void __fastcall GameLoopCB(uintptr_t ptr, int time, uintptr_t zero) {
 
 }
 static DWORD WINAPI SetHook(LPVOID param) {
-	console.create("Debug");
-	console.printf("dll base:%p\n", &__ImageBase);
-	console.printf("address offset:%X\n", (long long)(&address) - (long long)(&__ImageBase));
+
 	//Gw2-64.exe+671A3D - call Gw2-64.exe+1381DB0
 	uintptr_t funcPtr = FollowRelativeAddress(FindReadonlyStringRef("ViewAdvanceDevice") + 0xa);
 	uintptr_t resultPtr = FollowRelativeAddress(funcPtr + 0x3);
-	uintptr_t* cbPtrPtr = *(uintptr_t**)resultPtr;
-	if (cbPtrPtr == 0) return -1;
-	hook.target = cbPtrPtr;
-	hook.replaced = *cbPtrPtr;
-	*cbPtrPtr = GetPtr((uintptr_t)GameLoopCB);
+
+	while (true)
+	{
+		uintptr_t* cbPtrPtr = *(uintptr_t**)resultPtr;
+		if (cbPtrPtr == 0) {
+			Sleep(2000);
+			continue;
+		};
+		hook.target = cbPtrPtr;
+		hook.replaced = *cbPtrPtr;
+		*cbPtrPtr = GetPtr((uintptr_t)GameLoopCB);
+		break;
+	}
+
+	console.create("Debug");
+	console.printf("dll base:%p\n", &__ImageBase);
+	console.printf("address offset:%X\n", (long long)(&address) - (long long)(&__ImageBase));
 	return 0;
 }
 
