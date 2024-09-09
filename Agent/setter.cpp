@@ -33,7 +33,7 @@ void SetKeyBindsAddr() {
 	// Gw2-64.exe+59C8D8 - call qword ptr [rax+20] // call [[rsi]+20] (arg0=rsi,arg1=0|1)取得 是1號按鍵 還是2號按鍵
 	// Gw2-64.exe+59C8D8 - Gw2-64.exe+5A3A3F - lea rax,[rcx+10]  // arg1 為0+10
 	// Gw2-64.exe+59C8D8 - Gw2-64.exe+5A3A36 - lea rax,[rcx+60]  // arg1 為0+60
-	uintptr_t invalidHint =  staticAddress["No valid case for switch variable 'EBind'"];
+	uintptr_t invalidHint = staticAddress["No valid case for switch variable 'EBind'"];
 	int keyBindAddrOffset0 = (int)(*(char*)(invalidHint + 0x22));
 	int keyBindAddrOffset1 = (int)(*(char*)(invalidHint + 0x19));
 	// Gw2-64.exe+59CA8B - cmp ebp,000000E5  index 上限
@@ -63,8 +63,8 @@ void SetKeyBindsAddr() {
 	}
 	address.keyBind0 = (uintptr_t)keyBind0.data();
 	address.keyBind1 = (uintptr_t)keyBind1.data();
-	console.printf("keyBind Ary0: %p\n", address.keyBind0);
-	console.printf("keyBind Ary1: %p\n", address.keyBind1);
+	console.printf("keyBind ary0: %p\n", address.keyBind0);
+	console.printf("keyBind ary1: %p\n", address.keyBind1);
 
 }
 void SetMapStateAddr() {
@@ -97,18 +97,26 @@ void SetLangAddr() {
 
 }
 void SetFishAddr() {
+	uintptr_t getBaseAddr = FollowRelativeAddress(staticAddress["!m_state.TestBits(FLAG_ENTER_GAME)"] + 0x55);
+	uintptr_t baseAddr = ((uintptr_t(__thiscall*)())getBaseAddr)();
+
+	// Gw2-64.exe+6D88FE - call qword ptr [rdx+40]
+	int callOffset = (int)(*(char*)(staticAddress["!m_state.TestBits(FLAG_ENTER_GAME)"] + 0x61));
+	uintptr_t callAddr = *(uintptr_t*)((*(uintptr_t*)baseAddr) + callOffset);
+	// Gw2-64.exe+7557BE - mov rcx,[rbx+000000D0]
+	int chararcterOffset = *(int*)(callAddr + 0x61);
+	uintptr_t selfCharacter = *(uintptr_t*)(baseAddr + chararcterOffset);
+	uintptr_t chararcterFuncAry0 = *(uintptr_t*)selfCharacter;
+
+	
+	// Gw2-64.exe+128424D - call qword ptr [rax+000002C0]
+	int chararcterFuncAry0_offset = *(int*)(staticAddress["progressToCheck"] + 0x2C);
+	uintptr_t getFishBase = *(uintptr_t*)(chararcterFuncAry0 + chararcterFuncAry0_offset);
+	uintptr_t base = ((uintptr_t(__thiscall*)(uintptr_t))(getFishBase))(selfCharacter);
 
 	// Gw2-64.exe+12B2187 - lea rcx,[rsi+00005C78]
 	// Gw2-64.exe+12DCE18 - mov rcx,[rbx+28]
 	int fishOffset = 0x5c78 + 0x28;
-
-	uintptr_t baseAddr = ((uintptr_t(__thiscall*)())staticAddress["!m_state.TestBits(FLAG_ENTER_GAME)"])();
-	uintptr_t selfCharacter = *(uintptr_t*)(baseAddr + 0xD0);
-	uintptr_t chararcterFuncAry1 = *(uintptr_t*)selfCharacter;
-	// Gw2-64.exe+128424D - call qword ptr [rax+000002C0]
-	uintptr_t getFishBase = *(uintptr_t*)(chararcterFuncAry1 + 0x2c0);
-	uintptr_t base = ((uintptr_t(__thiscall*)(uintptr_t))(getFishBase))(selfCharacter);
-
 	address.fish = base + fishOffset;
 	console.printf("fish: %p\n", address.fish);
 

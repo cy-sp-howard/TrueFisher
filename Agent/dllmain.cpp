@@ -85,14 +85,15 @@ void __fastcall GameLoopCB(uintptr_t ptr, int time, uintptr_t zero) {
 		staticAddress["ValidateLanguage(language)"] = setLangFuncPtr;
 		uintptr_t getCharacterBasePtr = FollowRelativeAddress(FindReadonlyStringRef("ViewAdvanceCharacter") + 0xA);
 		staticAddress["ViewAdvanceCharacter"] = getCharacterBasePtr;
-		uintptr_t getSelfCharacterBasePtr = FollowRelativeAddress(FindReadonlyStringRef("!m_state.TestBits(FLAG_ENTER_GAME)") + 0x55);
-		staticAddress["!m_state.TestBits(FLAG_ENTER_GAME)"] = getSelfCharacterBasePtr;
+		staticAddress["!m_state.TestBits(FLAG_ENTER_GAME)"] = FindReadonlyStringRef("!m_state.TestBits(FLAG_ENTER_GAME)");
 		uintptr_t getMapStateBasePtr = FollowRelativeAddress(FindReadonlyStringRef("ViewAdvanceUi") + 0xA);
 		staticAddress["ViewAdvanceUi"] = getMapStateBasePtr;
 		uintptr_t keyBindLoopStart = FindReadonlyStringRef("No valid case for switch variable 'EState'") + 0x71;
 		staticAddress["No valid case for switch variable 'EState'"] = keyBindLoopStart;
 		uintptr_t keyBindInvalid = FindReadonlyStringRef("No valid case for switch variable 'EBind'");
 		staticAddress["No valid case for switch variable 'EBind'"] = keyBindInvalid;
+		staticAddress["progressToCheck"] = FindReadonlyStringRef("progressToCheck");
+
 
 		SetMapStateAddr();
 		SetLangAddr();
