@@ -45,6 +45,8 @@
 //
 //Gw2-64.exe+46F310  去得名字 (invalid character name)
 //
+// 寫入 語言的 
+// Gw2-64.exe+50AB3A - mov [rax+rcx*2],si
 
 
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;

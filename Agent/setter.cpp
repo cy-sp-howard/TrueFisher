@@ -120,6 +120,8 @@ void SetFishAddr() {
 	address.fish = base + fishOffset;
 	console.printf("fish: %p\n", address.fish);
 
+	//F3 0F 5E 05 ?? ?? ?? ?? F3 0F 5E 05 ?? ?? ?? ?? E8 ?? ?? ?? ?? 33 ED 0F 2F 05 ³]©w fish state ready
+
 
 	//auto getBase = (uintptr_t(__thiscall*)())(staticAddress["ViewAdvanceCharacter"]);
 	//uintptr_t baseAddr = *(uintptr_t*)(getBase() + 0x98);

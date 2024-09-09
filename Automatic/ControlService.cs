@@ -112,6 +112,14 @@ namespace BhModule.TrueFisher.Automatic
             {
                 MoveTargetToScreenCenter(new(holePos.X, holePos.Y));
             }
+            // 轉3d座標成 screen
+//            Vector3 screenPosition = viewport.Project(
+//    new Vector3(WorldUtil.GameToWorldCoord(GameService.Gw2Mumble.PlayerCharacter.Position.X),
+//        WorldUtil.GameToWorldCoord(GameService.Gw2Mumble.PlayerCharacter.Position.Y),
+//           WorldUtil.GameToWorldCoord(GameService.Gw2Mumble.PlayerCharacter.Position.Z))
+//, GameService.Gw2Mumble.PlayerCamera.Projection,
+// GameService.Gw2Mumble.PlayerCamera.View,
+//  GameService.Gw2Mumble.PlayerCamera.PlayerView);
             Mouse.SetPosition(((int)holePos.X), ((int)holePos.Y));
             Keyboard.Stroke(Skill_1);
             Thread.Sleep(50);
