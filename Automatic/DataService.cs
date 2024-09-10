@@ -177,11 +177,20 @@ namespace BhModule.TrueFisher.Automatic
                 if (agent.value != IntPtr.Zero)
                 {
                     agents.Add(agent);
+                    var m_agent_ID = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(agent.value, 0x8 + 0xb8), 0x4, new List<int> { 0x38, 0xc }).Parse<int>();
                     int type = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(agent.value, 0x8 + 0xb8), 0x8, new List<int> { 0x38, 0x8 }).Parse<int>().value;
 
+                    foreach (var _char in characters)
+                    {
+                        var ag = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(_char.value, 0x98), 0x4, new List<int> { 0xc }).Parse<int>().value;
+                        if (ag == m_agent_ID.value)
+                        {
+                            characterAgents.Add(agent);
+                        }
+                    }
                     if (type == 0)
                     {
-                        characterAgents.Add(agent);
+                        //characterAgents.Add(agent);
                     }
                     else if (type == 0xA)
                     {
