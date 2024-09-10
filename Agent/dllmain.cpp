@@ -95,6 +95,8 @@ void __fastcall GameLoopCB(uintptr_t ptr, int time, uintptr_t zero) {
 		uintptr_t keyBindInvalid = FindReadonlyStringRef("No valid case for switch variable 'EBind'");
 		staticAddress["No valid case for switch variable 'EBind'"] = keyBindInvalid;
 		staticAddress["progressToCheck"] = FindReadonlyStringRef("progressToCheck");
+		staticAddress["!(primaryEqual && secondaryEqual)"] = FindReadonlyStringRef("!(primaryEqual && secondaryEqual)");
+		
 
 
 		SetMapStateAddr();

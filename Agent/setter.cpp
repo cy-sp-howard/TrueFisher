@@ -37,7 +37,8 @@ void SetKeyBindsAddr() {
 	int keyBindAddrOffset0 = (int)(*(char*)(invalidHint + 0x22));
 	int keyBindAddrOffset1 = (int)(*(char*)(invalidHint + 0x19));
 	// Gw2-64.exe+59CA8B - cmp ebp,000000E5  index 上限
-	int max = *((int*)(loopFuncAddr + 0x2CD));
+	
+	int max = *((int*)(staticAddress["!(primaryEqual && secondaryEqual)"] + 0x55));
 	keyBind0.assign(max, 0);
 	keyBind1.assign(max, 0);
 	for (int i = 0; i < max; i++)
@@ -46,7 +47,7 @@ void SetKeyBindsAddr() {
 		// Gw2-64.exe+59C877 - lea rdx,[rsp+000000A8] arg1 index的pointer
 		// Gw2-64.exe+59C87F - lea rcx,[r13+50] arg0 A+50
 		// Gw2-64.exe+59C883 - call Gw2-64.exe+2B8A60 得到偏移值 帶入arg0,arg1
-		uintptr_t getBase = FollowRelativeAddress(loopFuncAddr + 0xC4);
+		uintptr_t getBase = FollowRelativeAddress(loopFuncAddr + 0xBE);
 		uintptr_t arg2 = 0;
 		int offset = ((int(__thiscall*)(uintptr_t, int*, uintptr_t*))(getBase))(keyBindsBase + 0x50, &i, &arg2);
 		// Gw2-64.exe+59C88A - mov rax,[r13+58] //[A+58]
