@@ -10,8 +10,12 @@ struct ADDRESS {
 	uintptr_t fish = 0;
 	uintptr_t keyBind0 = 0;
 	uintptr_t keyBind1 = 0;
-	std::vector<uintptr_t> characterAry;
 	uintptr_t selfCharacter = 0;
+	uintptr_t avAgent0 = 0;
+	uintptr_t avAgentA = 0;
+	uintptr_t avAgentB = 0;
+	uintptr_t avAgentF = 0;
+	uintptr_t avAgentU = 0;
 };
 
 
@@ -25,5 +29,6 @@ void SetLangAddr();
 void SetFishAddr();
 void SetMapStateAddr();
 void SetKeyBindsAddr();
-void resetInstanceImpactedAddress();
+void SetAvAgent();
+void OnMapChange();
 uintptr_t GetPtr(uintptr_t);

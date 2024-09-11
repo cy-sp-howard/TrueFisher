@@ -8,6 +8,11 @@ extern std::unordered_map<std::string, uintptr_t> staticAddress;
 
 std::vector<uintptr_t> keyBind0;
 std::vector<uintptr_t> keyBind1;
+std::vector<uintptr_t> avAgentCharacters;
+std::vector<uintptr_t> avAgentGadgets;
+std::vector<uintptr_t> avAgentAttackGadgets;
+std::vector<uintptr_t> avAgentItems;
+std::vector<uintptr_t> avAgentUnknown;
 
 // No valid case for switch variable 'EState' 取參考此地址的function +0x78 進入call目標地址 + D2 得(59c892 會取的偏移植)
 // Gw2-64.exe+59EE67 - lea rcx,[Gw2-64.exe+26EC0D0] 取得 固定值A
@@ -37,7 +42,7 @@ void SetKeyBindsAddr() {
 	int keyBindAddrOffset0 = (int)(*(char*)(invalidHint + 0x22));
 	int keyBindAddrOffset1 = (int)(*(char*)(invalidHint + 0x19));
 	// Gw2-64.exe+59CA8B - cmp ebp,000000E5  index 上限
-	
+
 	int max = *((int*)(staticAddress["!(primaryEqual && secondaryEqual)"] + 0x55));
 	keyBind0.assign(max, 0);
 	keyBind1.assign(max, 0);
@@ -47,9 +52,10 @@ void SetKeyBindsAddr() {
 		// Gw2-64.exe+59C877 - lea rdx,[rsp+000000A8] arg1 index的pointer
 		// Gw2-64.exe+59C87F - lea rcx,[r13+50] arg0 A+50
 		// Gw2-64.exe+59C883 - call Gw2-64.exe+2B8A60 得到偏移值 帶入arg0,arg1
-		uintptr_t getBase = FollowRelativeAddress(loopFuncAddr + 0xBE);
+		char arg0_offset = *(char*)(loopFuncAddr + 0x96);
+		uintptr_t getBase = FollowRelativeAddress(loopFuncAddr + 0x98);
 		uintptr_t arg2 = 0;
-		int offset = ((int(__thiscall*)(uintptr_t, int*, uintptr_t*))(getBase))(keyBindsBase + 0x50, &i, &arg2);
+		int offset = ((int(__thiscall*)(uintptr_t, int*, uintptr_t*))(getBase))(keyBindsBase + arg0_offset, &i, &arg2);
 		// Gw2-64.exe+59C88A - mov rax,[r13+58] //[A+58]
 		// Gw2-64.exe+59C88E - lea rdx,[rcx+rcx*2]  //result == rcx
 		// Gw2-64.exe+59C892 - mov rsi,[rax+rdx*8+08]  [rsi+34]得按鍵code
@@ -109,7 +115,7 @@ void SetFishAddr() {
 	uintptr_t selfCharacter = *(uintptr_t*)(baseAddr + chararcterOffset);
 	uintptr_t chararcterFuncAry0 = *(uintptr_t*)selfCharacter;
 
-	
+
 	// Gw2-64.exe+128424D - call qword ptr [rax+000002C0]
 	int chararcterFuncAry0_offset = *(int*)(staticAddress["progressToCheck"] + 0x2C);
 	uintptr_t getFishBase = *(uintptr_t*)(chararcterFuncAry0 + chararcterFuncAry0_offset);
@@ -167,7 +173,85 @@ void SetFishAddr() {
 	//	currentLoopAddr += 8;
 	//}
 }
+// Gw2-64.exe+6B7A8F - call Gw2-64.exe+136CA50 // 陣列資訊 base
+// Gw2-64.exe+136C816 - lea rcx,[rsi+68] 
+// Gw2-64.exe+136C81F - call Gw2-64.exe+139A950
+// Gw2-64.exe+136C81F - Gw2-64.exe+139A95F - mov rbx,[rcx+08]  // 取得第0個item
+// Gw2-64.exe+139A965 - mov eax,[rcx+14]  //取得最大index
+// Gw2-64.exe+139A9A5 - mov rcx,[rbx] //驗證有沒有內容物
+// Gw2-64.exe+139A9B2 - mov rax,[rcx] //取得avagent 的funcArray 
+// Gw2-64.exe+139A9B5 - call qword ptr [rax+00000140] //取得type (arg0=avagent)
 
-void resetInstanceImpactedAddress() {
+void SetAvAgent() {
+	avAgentCharacters.clear();
+	avAgentGadgets.clear();
+	avAgentAttackGadgets.clear();
+	avAgentItems.clear();
+	avAgentUnknown.clear();
+
+	uintptr_t loopFunc = FollowRelativeAddress(staticAddress["avAgentArray"] + 0x16);
+	// Gw2-64.exe+6B7A8F - call Gw2-64.exe+136CA50
+	uintptr_t arrayInfo = FollowRelativeAddress(FollowRelativeAddress(staticAddress["ViewAdvanceAgentView"] + 0xA) + 0x3);
+	// Gw2-64.exe+136C816 - lea rcx,[rsi+68]
+	// Gw2-64.exe+136C81F - call Gw2-64.exe+139A950
+// Gw2-64.exe+136C81F - Gw2-64.exe+139A95F - mov rbx,[rcx+08]  // 取得第0個item
+	uintptr_t firstItem = *(uintptr_t*)(arrayInfo + 0x68 + 0x8);
+	// Gw2-64.exe+139A965 - mov eax,[rcx+14]  //取得最大index
+	int len = *(int*)(arrayInfo + 0x68 + 0x14);
+	for (size_t i = 0; i < len; i++)
+	{
+		// Gw2-64.exe+139A9A5 - mov rcx,[rbx] //驗證有沒有內容物
+		uintptr_t avAgent = *(uintptr_t*)(firstItem + i * 0x8);
+		if (avAgent == 0) continue;
+		// Gw2-64.exe+139A9B2 - mov rax,[rcx] //取得avagent 的funcArray 
+		uintptr_t avAgentFuncAry = *(uintptr_t*)avAgent;
+		// Gw2-64.exe+139A9B5 - call qword ptr [rax+00000140] //取得type (arg0=avagent)
+		uintptr_t getAgentType = *(uintptr_t*)(avAgentFuncAry + 0x140);
+		int type = ((int(__thiscall*)(uintptr_t))getAgentType)(avAgent);
+		if (type == 0x0) {
+			avAgentCharacters.push_back(avAgent);
+		}
+		else if (type == 0xA) {
+			avAgentGadgets.push_back(avAgent);
+		}
+		else if (type == 0xB) {
+			avAgentAttackGadgets.push_back(avAgent);
+		}
+		else if (type == 0xF) {
+			avAgentItems.push_back(avAgent);
+		}
+		else {
+			avAgentUnknown.push_back(avAgent);
+		}
+
+	}
+	if (address.avAgent0 == 0) {
+		address.avAgent0 = (uintptr_t)avAgentCharacters.data();
+		if (address.avAgent0 == 0) return;
+		console.printf("avAgent ary0: %p\n", address.avAgent0);
+	};
+	if (address.avAgentA == 0) {
+		address.avAgentA = (uintptr_t)avAgentGadgets.data();
+		if (address.avAgentA == 0) return;
+		console.printf("avAgent aryA: %p\n", address.avAgentA);
+	};
+	if (address.avAgentB == 0) {
+		address.avAgentB = (uintptr_t)avAgentAttackGadgets.data();
+		if (address.avAgentB == 0) return;
+		console.printf("avAgent aryB: %p\n", address.avAgentB);
+	};
+	if (address.avAgentF == 0) {
+		address.avAgentF = (uintptr_t)avAgentItems.data();
+		if (address.avAgentF == 0) return;
+		console.printf("avAgent aryF: %p\n", address.avAgentF);
+	};
+	if (address.avAgentU == 0) {
+		address.avAgentU = (uintptr_t)avAgentUnknown.data();
+		if (address.avAgentU == 0) return;
+		console.printf("avAgent aryU: %p\n", address.avAgentU);
+	};
+}
+
+void OnMapChange() {
 	address.fish = 0;
 }

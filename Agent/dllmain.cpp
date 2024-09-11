@@ -72,9 +72,10 @@ void mapLoadedCall() {
 		char mapState = *(char*)address.mapState;
 		if (mapState == 0xF) {
 			if (address.fish == 0) SetFishAddr();
+			SetAvAgent();
 		}
 		else {
-			resetInstanceImpactedAddress();
+			OnMapChange();
 		}
 	}
 }
@@ -92,10 +93,11 @@ void __fastcall GameLoopCB(uintptr_t ptr, int time, uintptr_t zero) {
 		staticAddress["ViewAdvanceUi"] = getMapStateBasePtr;
 		uintptr_t keyBindLoopStart = FindReadonlyStringRef("No valid case for switch variable 'EState'") + 0x71;
 		staticAddress["No valid case for switch variable 'EState'"] = keyBindLoopStart;
-		uintptr_t keyBindInvalid = FindReadonlyStringRef("No valid case for switch variable 'EBind'");
-		staticAddress["No valid case for switch variable 'EBind'"] = keyBindInvalid;
+		staticAddress["No valid case for switch variable 'EBind'"] = FindReadonlyStringRef("No valid case for switch variable 'EBind'");
 		staticAddress["progressToCheck"] = FindReadonlyStringRef("progressToCheck");
 		staticAddress["!(primaryEqual && secondaryEqual)"] = FindReadonlyStringRef("!(primaryEqual && secondaryEqual)");
+		staticAddress["avAgentArray"] = FindReadonlyStringRef("avAgentArray");
+		staticAddress["ViewAdvanceAgentView"] = FindReadonlyStringRef("ViewAdvanceAgentView");
 		
 
 

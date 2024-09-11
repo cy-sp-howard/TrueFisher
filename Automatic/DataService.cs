@@ -49,16 +49,14 @@ namespace BhModule.TrueFisher.Automatic
 
 
         private List<Mem<IntPtr>> characters { get; set; } = new List<Mem<IntPtr>>();
-        private List<Mem<IntPtr>> characterAgents { get; set; } = new List<Mem<IntPtr>>();
-        private List<Mem<IntPtr>> itemAgents { get; set; } = new List<Mem<IntPtr>>();
         private List<Mem<IntPtr>> playerCharacters { get; set; } = new List<Mem<IntPtr>>();
-        private List<Mem<IntPtr>> agents { get; set; } = new List<Mem<IntPtr>>();
-        private List<Mem<IntPtr>> gadgetAgents { get; set; } = new List<Mem<IntPtr>>();
-        private List<Mem<IntPtr>> gadgetAttackTargetAgents { get; set; } = new List<Mem<IntPtr>>();
+        private List<Mem<IntPtr>> avAgents { get; set; } = new List<Mem<IntPtr>>();
+        private List<Mem<IntPtr>> gadgetAvAgents { get; set; } = new List<Mem<IntPtr>>();
+        private List<Mem<IntPtr>> notGadgetAvAgents { get; set; } = new List<Mem<IntPtr>>();
+        private List<Mem<IntPtr>> wpGadgetAvAgents { get; set; } = new List<Mem<IntPtr>>();
+
 
         private List<modelPos> models { get; set; } = new List<modelPos>();
-        private List<modelPos> fishModels { get; set; } = new List<modelPos>();
-        private List<modelPos> fish2Models { get; set; } = new List<modelPos>();
         private List<modelPos> in5m { get; set; }
         private int waiting = 0;
         public DataService(TrueFisherModule module)
@@ -70,7 +68,7 @@ namespace BhModule.TrueFisher.Automatic
         void GetCharacters()
         {
             waiting += 1;
-            var root = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(Address, 0x26E9E00), 8, new List<int>() { 0x38 }).Parse<IntPtr>().value;
+            var root = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(Address, 0x26F1E40), 8, new List<int>() { 0x38 }).Parse<IntPtr>().value;
             var base1 = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(root, 0x98), 8).Parse<IntPtr>(); //6719af得rax
             var firtAddr = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(base1.value, 0x60), 8).Parse<IntPtr>();
             var lastAddrOffset = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(base1.value, 0x6C), 8).Parse<int>().value * 8;
@@ -115,9 +113,8 @@ namespace BhModule.TrueFisher.Automatic
 
             waiting += 1;
             models.Clear();
-            fishModels.Clear();
-            fish2Models.Clear();
-            IntPtr firstModelParent = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(Address, 0x2750658 + 0x8 + 0x8), 0x8).Parse<IntPtr>().value;
+            // Gw2-64.exe+10415C8 - lea rdx,[Gw2-64.exe+275B348]
+            IntPtr firstModelParent = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(Address, 0x275B348 + 0x8 + 0x8), 0x8).Parse<IntPtr>().value;
             IntPtr currentModelParent = firstModelParent;
             int currentLoop = 0;
             while (currentModelParent != IntPtr.Zero)
@@ -139,14 +136,7 @@ namespace BhModule.TrueFisher.Automatic
                         var data = new modelPos() { x = x, y = y, z = z, distance = distance, characterPosAddr = characterPosAddr, modelBase = modelBase, modelParent = currentModelParent };
 
                         models.Add(data);
-                        if (MemUtil.ReadMem(DataService.Handle, IntPtr.Add(modelBase, 0x2A0), 0x4).Parse<int>().value == 0x48)
-                        {
-                            fishModels.Add(data);
-                        }
-                        if (MemUtil.ReadMem(DataService.Handle, IntPtr.Add(modelBase, 0x2AC), 0x4).Parse<int>().value == 0x1C2)
-                        {
-                            fish2Models.Add(data);
-                        }
+
                     }
                 }
 
@@ -156,18 +146,17 @@ namespace BhModule.TrueFisher.Automatic
             in5m = models.FindAll(item => item.distance < 5);
             waiting -= 1;
         }
-        void GetAgents()
+        void GetAvAgents()
         {
             waiting += 1;
 
 
-            agents.Clear();
-            characterAgents.Clear();
-            gadgetAgents.Clear();
-            itemAgents.Clear();
-            gadgetAttackTargetAgents.Clear();
-            IntPtr firstAgentAddressPtr = IntPtr.Add(Address, 0x249CE90 + 0x68 + 0x8);
-            IntPtr agentMaxCountPtr = IntPtr.Add(Address, 0x249CE90 + 0x68 + 0x14);
+            avAgents.Clear();
+            gadgetAvAgents.Clear();
+            notGadgetAvAgents.Clear();
+            wpGadgetAvAgents.Clear();
+            IntPtr firstAgentAddressPtr = IntPtr.Add(Address, 0x24DAE90 + 0x68 + 0x8);
+            IntPtr agentMaxCountPtr = IntPtr.Add(Address, 0x24DAE90 + 0x68 + 0x14);
             int max = MemUtil.ReadMem(DataService.Handle, agentMaxCountPtr, 0x4).Parse<int>().value;
             IntPtr firstAgentAddress = MemUtil.ReadMem(DataService.Handle, firstAgentAddressPtr, 0x8).Parse<IntPtr>().value;
             for (int i = 0; i < max; i++)
@@ -176,37 +165,24 @@ namespace BhModule.TrueFisher.Automatic
                 var agent = MemUtil.ReadMem(DataService.Handle, CurrentAgentAddress, 0x8).Parse<IntPtr>();
                 if (agent.value != IntPtr.Zero)
                 {
-                    agents.Add(agent);
-                    var m_agent_ID = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(agent.value, 0x8 + 0xb8), 0x4, new List<int> { 0x38, 0xc }).Parse<int>();
+                    avAgents.Add(agent);
                     int type = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(agent.value, 0x8 + 0xb8), 0x8, new List<int> { 0x38, 0x8 }).Parse<int>().value;
 
-                    foreach (var _char in characters)
+
+                    if (type == 0xA)
                     {
-                        var ag = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(_char.value, 0x98), 0x4, new List<int> { 0xc }).Parse<int>().value;
-                        if (ag == m_agent_ID.value)
+                        int gadgetType = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(agent.value, 0x8 + 0xb8), 0x4, new List<int> { 0x200 }).Parse<int>().value;
+                        if (gadgetType == 0x12)
                         {
-                            characterAgents.Add(agent);
+                            wpGadgetAvAgents.Add(agent);
                         }
+                        gadgetAvAgents.Add(agent);
                     }
-                    if (type == 0)
+                    else
                     {
-                        //characterAgents.Add(agent);
+                        notGadgetAvAgents.Add(agent);
                     }
-                    else if (type == 0xA)
-                    {
 
-                        gadgetAgents.Add(agent);
-                    }
-                    else if (type == 0xB)
-                    {
-
-                        gadgetAttackTargetAgents.Add(agent);
-                    }
-                    else if (type == 0xF)
-                    {
-
-                        itemAgents.Add(agent);
-                    }
                 }
             }
 
@@ -218,7 +194,7 @@ namespace BhModule.TrueFisher.Automatic
             foreach (var item in characters)
             {
                 var m_a = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(item.value, 0x98), 8).Parse<IntPtr>().value;
-                var found = agents.Find(a =>
+                var found = avAgents.Find(a =>
                 {
                     var _m_a = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(a.value, 0x8 + 0xb8), 0x8, new List<int> { 0x38 }).Parse<long>().value;
                     return _m_a == m_a.ToInt64();
@@ -239,7 +215,7 @@ namespace BhModule.TrueFisher.Automatic
             {
                 GetCharacters();
                 GetModels();
-                GetAgents();
+                GetAvAgents();
                 matchAgent();
             }
         }
