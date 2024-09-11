@@ -182,6 +182,14 @@ void SetFishAddr() {
 // Gw2-64.exe+139A9B2 - mov rax,[rcx] //取得avagent 的funcArray 
 // Gw2-64.exe+139A9B5 - call qword ptr [rax+00000140] //取得type (arg0=avagent)
 
+// Gw2-64.exe+57E8A5 - call qword ptr [rax+00000100] ///取得gadget type([gadget+200])，arg0 是gadget
+// Gw2-64.exe+57E8AB - cmp eax,13 //為 node resource
+// Gw2-64.exe+57E8BA - call qword ptr [rax+00000170] //取得resource node位置，arg0 是gadget
+// Gw2-64.exe+57E8E1 - mov rdx,[rbx] //取結果內值 [gadget+4d8]
+// Gw2-64.exe+57E8E7 - call qword ptr [rdx] 取得resource type，arg0 是gadget+4d8，得 [gadget+4d8+c]
+// Gw2-64.exe+57E8E9 - cmp eax,03 //type 為0x3
+
+
 void SetAvAgent() {
 	avAgentCharacters.clear();
 	avAgentGadgets.clear();
@@ -194,7 +202,7 @@ void SetAvAgent() {
 	uintptr_t arrayInfo = FollowRelativeAddress(FollowRelativeAddress(staticAddress["ViewAdvanceAgentView"] + 0xA) + 0x3);
 	// Gw2-64.exe+136C816 - lea rcx,[rsi+68]
 	// Gw2-64.exe+136C81F - call Gw2-64.exe+139A950
-// Gw2-64.exe+136C81F - Gw2-64.exe+139A95F - mov rbx,[rcx+08]  // 取得第0個item
+	// Gw2-64.exe+136C81F - Gw2-64.exe+139A95F - mov rbx,[rcx+08]  // 取得第0個item
 	uintptr_t firstItem = *(uintptr_t*)(arrayInfo + 0x68 + 0x8);
 	// Gw2-64.exe+139A965 - mov eax,[rcx+14]  //取得最大index
 	int len = *(int*)(arrayInfo + 0x68 + 0x14);

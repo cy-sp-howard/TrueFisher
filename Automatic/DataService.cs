@@ -54,6 +54,7 @@ namespace BhModule.TrueFisher.Automatic
         private List<Mem<IntPtr>> gadgetAvAgents { get; set; } = new List<Mem<IntPtr>>();
         private List<Mem<IntPtr>> notGadgetAvAgents { get; set; } = new List<Mem<IntPtr>>();
         private List<Mem<IntPtr>> wpGadgetAvAgents { get; set; } = new List<Mem<IntPtr>>();
+        private List<Mem<IntPtr>> in5mgadgetAvAgents { get; set; } = new List<Mem<IntPtr>>();
 
 
         private List<modelPos> models { get; set; } = new List<modelPos>();
@@ -155,6 +156,7 @@ namespace BhModule.TrueFisher.Automatic
             gadgetAvAgents.Clear();
             notGadgetAvAgents.Clear();
             wpGadgetAvAgents.Clear();
+            in5mgadgetAvAgents.Clear();
             IntPtr firstAgentAddressPtr = IntPtr.Add(Address, 0x24DAE90 + 0x68 + 0x8);
             IntPtr agentMaxCountPtr = IntPtr.Add(Address, 0x24DAE90 + 0x68 + 0x14);
             int max = MemUtil.ReadMem(DataService.Handle, agentMaxCountPtr, 0x4).Parse<int>().value;
@@ -168,11 +170,23 @@ namespace BhModule.TrueFisher.Automatic
                     avAgents.Add(agent);
                     int type = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(agent.value, 0x8 + 0xb8), 0x8, new List<int> { 0x38, 0x8 }).Parse<int>().value;
 
-
+                    var pos = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(agent.value, 0xe8), 12);
+                    float x = BitConverter.ToSingle(pos.value, 0);
+                    float y = BitConverter.ToSingle(pos.value, 4);
+                    float z = BitConverter.ToSingle(pos.value, 8);
+                    Vector3 _pos = new Vector3(x, y, z);
+                    Vector3 selfPos = new Vector3(WorldUtil.WorldToGameCoord(GameService.Gw2Mumble.PlayerCharacter.Position.X),
+                   WorldUtil.WorldToGameCoord(GameService.Gw2Mumble.PlayerCharacter.Position.Y),
+                   WorldUtil.WorldToGameCoord(GameService.Gw2Mumble.PlayerCharacter.Position.Z));
+                    float distance = Vector3.Distance(_pos, selfPos);
+                    if (distance < 100)
+                    {
+                        in5mgadgetAvAgents.Add(agent);
+                    }
                     if (type == 0xA)
                     {
                         int gadgetType = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(agent.value, 0x8 + 0xb8), 0x4, new List<int> { 0x200 }).Parse<int>().value;
-                        if (gadgetType == 0x12)
+                        if (gadgetType == 19)
                         {
                             wpGadgetAvAgents.Add(agent);
                         }
