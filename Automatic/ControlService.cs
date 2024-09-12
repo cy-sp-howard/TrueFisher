@@ -105,22 +105,24 @@ namespace BhModule.TrueFisher.Automatic
 
         public void CastLine()
         {
-            if (!module.FishService.HoleInRange) return;
-            Vector3 holePos = module.FishService.NearestHole.Position;
-            Vector2 resolution = GameService.Graphics.Resolution.ToVector2();
-            if (holePos.X < 0 || holePos.Y < 0 || holePos.X > resolution.X || holePos.Y > resolution.Y)
-            {
-                MoveTargetToScreenCenter(new(holePos.X, holePos.Y));
-            }
+            //if (!module.FishService.HoleInRange) return;
+            Vector3 holePos = module.DataService.ScanAvAgent();
+            //Vector2 resolution = GameService.Graphics.Resolution.ToVector2();
+            //if (holePos.X < 0 || holePos.Y < 0 || holePos.X > resolution.X || holePos.Y > resolution.Y)
+            //{
+            //    MoveTargetToScreenCenter(new(holePos.X, holePos.Y));
+            //}
             // 轉3d座標成 screen
-//            Vector3 screenPosition = viewport.Project(
-//    new Vector3(WorldUtil.GameToWorldCoord(GameService.Gw2Mumble.PlayerCharacter.Position.X),
-//        WorldUtil.GameToWorldCoord(GameService.Gw2Mumble.PlayerCharacter.Position.Y),
-//           WorldUtil.GameToWorldCoord(GameService.Gw2Mumble.PlayerCharacter.Position.Z))
-//, GameService.Gw2Mumble.PlayerCamera.Projection,
-// GameService.Gw2Mumble.PlayerCamera.View,
-//  GameService.Gw2Mumble.PlayerCamera.PlayerView);
-            Mouse.SetPosition(((int)holePos.X), ((int)holePos.Y));
+            using (var gdctx = GameService.Graphics.LendGraphicsDeviceContext())
+            {
+
+                Vector3 screenPosition = gdctx.GraphicsDevice.Viewport.Project(new Vector3(WorldUtil.GameToWorldCoord(GameService.Gw2Mumble.PlayerCharacter.Position.X), WorldUtil.GameToWorldCoord(GameService.Gw2Mumble.PlayerCharacter.Position.Y), WorldUtil.GameToWorldCoord(GameService.Gw2Mumble.PlayerCharacter.Position.Z))
+              , GameService.Gw2Mumble.PlayerCamera.Projection,
+               GameService.Gw2Mumble.PlayerCamera.View,
+                GameService.Gw2Mumble.PlayerCamera.PlayerView);
+                Mouse.SetPosition(((int)screenPosition.X), ((int)screenPosition.Y),true);
+            }
+
             Keyboard.Stroke(Skill_1);
             Thread.Sleep(50);
         }
@@ -143,6 +145,7 @@ namespace BhModule.TrueFisher.Automatic
         private void OnFishStateChange(object sender, ChangeEventArgs<FishState> evt)
         {
             if (evt.Current == FishState.READY) SetHook();
+            else if (evt.Current == FishState.UNKNOWN) CastLine();
         }
         private void OnFishProgressionChange(object sender, ChangeEventArgs<float> evt)
         {

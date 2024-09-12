@@ -66,11 +66,36 @@ namespace BhModule.TrueFisher.Automatic
             if (GameService.GameIntegration.Gw2Instance.Gw2IsRunning) AgentDLL.InjectDLL();
             GameService.GameIntegration.Gw2Instance.Gw2Started += delegate { AgentDLL.InjectDLL(); };
         }
-        void ScanAvAgent()
+        public Vector3 ScanAvAgent()
         {
-            MemTrail target = new(0x38) { BaseAddress = DataService.AgentDLL.AddressData };
-            Write(target, [0]);
+            Write(FishMem.ScanHoleSwitch, [0]);
             Thread.Sleep(50);
+            Vector3 selfPos = new Vector3(WorldUtil.WorldToGameCoord(GameService.Gw2Mumble.PlayerCharacter.Position.X),
+WorldUtil.WorldToGameCoord(GameService.Gw2Mumble.PlayerCharacter.Position.Y),
+WorldUtil.WorldToGameCoord(GameService.Gw2Mumble.PlayerCharacter.Position.Z));
+            IntPtr currentHole = Read<IntPtr>(FishMem.HolesStart).value;
+            IntPtr holeEnd = Read<IntPtr>(FishMem.HolesEnd).value;
+            IntPtr result = IntPtr.Zero;
+            float resultDistance = float.PositiveInfinity;
+            Vector3 resultPos = new Vector3(0, 0, 0);
+            while (currentHole.ToInt64() < holeEnd.ToInt64())
+            {
+                byte[] posBytes = MemUtil.ReadMem(DataService.Handle, currentHole, 12, [0xe8]).value;
+                float x = BitConverter.ToSingle(posBytes, 0);
+                float y = BitConverter.ToSingle(posBytes, 4);
+                float z = BitConverter.ToSingle(posBytes, 8);
+                Vector3 pos = new Vector3(x, y, z);
+                float distance = Vector3.Distance(selfPos, pos);
+                if (resultDistance > distance)
+                {
+                    result = currentHole;
+                    resultPos = pos;
+                    resultDistance = distance;
+                }
+                currentHole = IntPtr.Add(currentHole, 0x8);
+            }
+            return resultPos;
+
         }
         void GetCharacters()
         {
@@ -217,7 +242,7 @@ namespace BhModule.TrueFisher.Automatic
                 //GetCharacters();
                 //GetModels();
                 //GetAvAgents();
-                ScanAvAgent();
+                //ScanAvAgent();
             }
         }
         public void Unload()
@@ -333,7 +358,11 @@ namespace BhModule.TrueFisher.Automatic
         public static MemTrail YellowBarWidth => BaseMemAddr.AddOffset(0x64);
         public static MemTrail UserPos => BaseMemAddr.AddOffset(0x60);
         public static MemTrail InRange => BaseMemAddr.AddOffset(0x68);
+        public static MemTrail HolesStart => new(0x68, [0x8]) { BaseAddress = DataService.AgentDLL.AddressData };
+        public static MemTrail HolesEnd => new(0x68, [0x10]) { BaseAddress = DataService.AgentDLL.AddressData };
+        public static MemTrail ScanHoleSwitch => new(0x38) { BaseAddress = DataService.AgentDLL.AddressData };
     }
+
     public static class SettingMem
     {
         public static MemTrail DLLReady => new(0) { BaseAddress = DataService.AgentDLL.AddressData };

@@ -249,36 +249,19 @@ void SetAvAgent() {
 	address.scanned = true;
 	console.printf("avAgent scanned\n");
 	if (address.avAgent0 == 0) {
-		address.avAgent0 = (uintptr_t)avAgentCharacters.data();
-		if (address.avAgent0 == 0) return;
+		address.avAgent0 = (uintptr_t)&avAgentCharacters;
+		address.avAgentA = (uintptr_t)&avAgentGadgets;
+		address.avAgentB = (uintptr_t)&avAgentAttackGadgets;
+		address.avAgentF = (uintptr_t)&avAgentItems;
+		address.avAgentU = (uintptr_t)&avAgentUnknown;
+		address.avAgentH = (uintptr_t)&avAgentGadgetFishHoles;
 		console.printf("avAgent ary0: %p\n", address.avAgent0);
-	};
-	if (address.avAgentA == 0) {
-		address.avAgentA = (uintptr_t)avAgentGadgets.data();
-		if (address.avAgentA == 0) return;
 		console.printf("avAgent aryA: %p\n", address.avAgentA);
-		address.ready = true;
-	};
-	if (address.avAgentB == 0) {
-		address.avAgentB = (uintptr_t)avAgentAttackGadgets.data();
-		if (address.avAgentB == 0) return;
-		console.printf("avAgent aryB: %p\n", address.avAgentB);
-	};
-	if (address.avAgentF == 0) {
-		address.avAgentF = (uintptr_t)avAgentItems.data();
-		if (address.avAgentF == 0) return;
-		console.printf("avAgent aryF: %p\n", address.avAgentF);
-	};
-	if (address.avAgentU == 0) {
-		address.avAgentU = (uintptr_t)avAgentUnknown.data();
-		if (address.avAgentU == 0) return;
-		console.printf("avAgent aryU: %p\n", address.avAgentU);
-	};
-	if (address.avAgentH == 0) {
-		address.avAgentH = (uintptr_t)avAgentGadgetFishHoles.data();
-		if (address.avAgentH == 0) return;
 		console.printf("avAgent aryH: %p\n", address.avAgentH);
-	};
+		console.printf("avAgent aryB: %p\n", address.avAgentB);
+		console.printf("avAgent aryF: %p\n", address.avAgentF);
+		console.printf("avAgent aryU: %p\n", address.avAgentU);
+	}
 }
 
 void OnMapChange() {
