@@ -66,6 +66,12 @@ namespace BhModule.TrueFisher.Automatic
             if (GameService.GameIntegration.Gw2Instance.Gw2IsRunning) AgentDLL.InjectDLL();
             GameService.GameIntegration.Gw2Instance.Gw2Started += delegate { AgentDLL.InjectDLL(); };
         }
+        void ScanAvAgent()
+        {
+            MemTrail target = new(0x38) { BaseAddress = DataService.AgentDLL.AddressData };
+            Write(target, [0]);
+            Thread.Sleep(50);
+        }
         void GetCharacters()
         {
             waiting += 1;
@@ -179,7 +185,7 @@ namespace BhModule.TrueFisher.Automatic
                    WorldUtil.WorldToGameCoord(GameService.Gw2Mumble.PlayerCharacter.Position.Y),
                    WorldUtil.WorldToGameCoord(GameService.Gw2Mumble.PlayerCharacter.Position.Z));
                     float distance = Vector3.Distance(_pos, selfPos);
-                    if (distance < 100)
+                    if (distance < 5000)
                     {
                         in5mgadgetAvAgents.Add(agent);
                     }
@@ -202,35 +208,16 @@ namespace BhModule.TrueFisher.Automatic
 
             waiting -= 1;
         }
-
-        void matchAgent()
-        {
-            foreach (var item in characters)
-            {
-                var m_a = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(item.value, 0x98), 8).Parse<IntPtr>().value;
-                var found = avAgents.Find(a =>
-                {
-                    var _m_a = MemUtil.ReadMem(DataService.Handle, IntPtr.Add(a.value, 0x8 + 0xb8), 0x8, new List<int> { 0x38 }).Parse<long>().value;
-                    return _m_a == m_a.ToInt64();
-                });
-                if (found != null)
-                {
-                    Trace.WriteLine("found");
-                }
-            }
-        }
-
-
         public void Update(GameTime gameTime)
         {
             if (waiting > 0) return;
             var kstate = Keyboard.GetState();
             if (kstate.IsKeyDown(Keys.OemCloseBrackets))
             {
-                GetCharacters();
-                GetModels();
-                GetAvAgents();
-                matchAgent();
+                //GetCharacters();
+                //GetModels();
+                //GetAvAgents();
+                ScanAvAgent();
             }
         }
         public void Unload()
@@ -246,7 +233,7 @@ namespace BhModule.TrueFisher.Automatic
 
         public event EventHandler<ChangeEventArgs<bool>> Ready;
         public IntPtr BaseAddress { get => baseAddress; }
-        public IntPtr AddressData { get => IntPtr.Add(baseAddress, 0xC0A10); }
+        public IntPtr AddressData { get => IntPtr.Add(baseAddress, 0xC1A10); }
         IntPtr baseAddress;
         System.Timers.Timer checkReadyTimer;
         Process process

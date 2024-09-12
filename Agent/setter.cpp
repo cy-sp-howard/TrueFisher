@@ -13,6 +13,7 @@ std::vector<uintptr_t> avAgentGadgets;
 std::vector<uintptr_t> avAgentAttackGadgets;
 std::vector<uintptr_t> avAgentItems;
 std::vector<uintptr_t> avAgentUnknown;
+std::vector<uintptr_t> avAgentGadgetFishHoles;
 
 // No valid case for switch variable 'EState' 取參考此地址的function +0x78 進入call目標地址 + D2 得(59c892 會取的偏移植)
 // Gw2-64.exe+59EE67 - lea rcx,[Gw2-64.exe+26EC0D0] 取得 固定值A
@@ -179,9 +180,13 @@ void SetFishAddr() {
 // Gw2-64.exe+136C81F - Gw2-64.exe+139A95F - mov rbx,[rcx+08]  // 取得第0個item
 // Gw2-64.exe+139A965 - mov eax,[rcx+14]  //取得最大index
 // Gw2-64.exe+139A9A5 - mov rcx,[rbx] //驗證有沒有內容物
-// Gw2-64.exe+139A9B2 - mov rax,[rcx] //取得avagent 的funcArray 
+// Gw2-64.exe+139A9B2 - mov rax,[rcx] //取得avagent 第0個的funcArray 
 // Gw2-64.exe+139A9B5 - call qword ptr [rax+00000140] //取得type (arg0=avagent)
 
+
+// Gw2-64.exe+139A9B5 - Gw2-64.exe+137B638 - add rcx,08 
+// Gw2-64.exe+139A9B5 - Gw2-64.exe+137B63C - call qword ptr [rax+00000138] //avagent 第1個funcArray + 138(arg0為avagent+8)
+// Gw2-64.exe+139A9B5 - Gw2-64.exe+137B5C0 - mov rcx,[rcx+000000B8] // 先取得 gadget 再取得agent
 // Gw2-64.exe+57E8A5 - call qword ptr [rax+00000100] ///取得gadget type([gadget+200])，arg0 是gadget
 // Gw2-64.exe+57E8AB - cmp eax,13 //為 node resource
 // Gw2-64.exe+57E8BA - call qword ptr [rax+00000170] //取得resource node位置，arg0 是gadget
@@ -193,6 +198,7 @@ void SetFishAddr() {
 void SetAvAgent() {
 	avAgentCharacters.clear();
 	avAgentGadgets.clear();
+	avAgentGadgetFishHoles.clear();
 	avAgentAttackGadgets.clear();
 	avAgentItems.clear();
 	avAgentUnknown.clear();
@@ -221,6 +227,12 @@ void SetAvAgent() {
 		}
 		else if (type == 0xA) {
 			avAgentGadgets.push_back(avAgent);
+			uintptr_t gadget = *(uintptr_t*)(avAgent + 0xC0);
+			int nodeType = *(int*)(gadget + 0x4d8 + 0xc);
+			if (nodeType == 0x3) {
+				avAgentGadgetFishHoles.push_back(avAgent);
+			}
+
 		}
 		else if (type == 0xB) {
 			avAgentAttackGadgets.push_back(avAgent);
@@ -233,6 +245,9 @@ void SetAvAgent() {
 		}
 
 	}
+
+	address.scanned = true;
+	console.printf("avAgent scanned\n");
 	if (address.avAgent0 == 0) {
 		address.avAgent0 = (uintptr_t)avAgentCharacters.data();
 		if (address.avAgent0 == 0) return;
@@ -242,6 +257,7 @@ void SetAvAgent() {
 		address.avAgentA = (uintptr_t)avAgentGadgets.data();
 		if (address.avAgentA == 0) return;
 		console.printf("avAgent aryA: %p\n", address.avAgentA);
+		address.ready = true;
 	};
 	if (address.avAgentB == 0) {
 		address.avAgentB = (uintptr_t)avAgentAttackGadgets.data();
@@ -258,8 +274,14 @@ void SetAvAgent() {
 		if (address.avAgentU == 0) return;
 		console.printf("avAgent aryU: %p\n", address.avAgentU);
 	};
+	if (address.avAgentH == 0) {
+		address.avAgentH = (uintptr_t)avAgentGadgetFishHoles.data();
+		if (address.avAgentH == 0) return;
+		console.printf("avAgent aryH: %p\n", address.avAgentH);
+	};
 }
 
 void OnMapChange() {
 	address.fish = 0;
+	address.scanned = false;
 }

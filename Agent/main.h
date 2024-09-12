@@ -11,11 +11,13 @@ struct ADDRESS {
 	uintptr_t keyBind0 = 0;
 	uintptr_t keyBind1 = 0;
 	uintptr_t selfCharacter = 0;
+	bool scanned = false;
 	uintptr_t avAgent0 = 0;
 	uintptr_t avAgentA = 0;
 	uintptr_t avAgentB = 0;
 	uintptr_t avAgentF = 0;
 	uintptr_t avAgentU = 0;
+	uintptr_t avAgentH = 0;
 };
 
 

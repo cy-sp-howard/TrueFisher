@@ -72,7 +72,7 @@ void mapLoadedCall() {
 		char mapState = *(char*)address.mapState;
 		if (mapState == 0xF) {
 			if (address.fish == 0) SetFishAddr();
-			SetAvAgent();
+			if (address.scanned == false) SetAvAgent();
 		}
 		else {
 			OnMapChange();
