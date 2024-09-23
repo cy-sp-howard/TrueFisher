@@ -268,7 +268,8 @@ WorldUtil.WorldToGameCoord(GameService.Gw2Mumble.PlayerCharacter.Position.Z));
 
         IntPtr initDLLFile()
         {
-            byte[] dllBytes = Resource.Agent_debug;
+            byte[] dllBytes = Resource.AgentDLL;
+
             string dllFullPath = Path.GetFullPath(dllName);
             byte[] dllFullPath_bytes = Encoding.ASCII.GetBytes(dllFullPath);
             try
