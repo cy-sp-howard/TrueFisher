@@ -98,6 +98,7 @@ namespace BhModule.TrueFisher.Automatic
 
         public void CastLine()
         {
+            return;
             if (!module.FishService.HoleInRange) return;
             Vector2 screenSize = GameService.Graphics.Resolution.ToVector2();
             var targetHole = module.FishService.NearestHole;

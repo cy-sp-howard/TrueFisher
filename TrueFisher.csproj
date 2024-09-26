@@ -105,6 +105,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PreBuildEvent>xcopy $(ProjectDir)\$(PlatformName)\$(ConfigurationName)\Agent.dll $(ProjectDir)\$(PlatformName)\</PreBuildEvent>
+    <PreBuildEvent>del $(ProjectDir)\$(PlatformName)\Agent.dll
+xcopy $(ProjectDir)\$(PlatformName)\$(ConfigurationName)\Agent.dll $(ProjectDir)\$(PlatformName)\</PreBuildEvent>
   </PropertyGroup>
 </Project>
