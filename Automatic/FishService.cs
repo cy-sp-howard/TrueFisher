@@ -13,6 +13,7 @@ using System.Diagnostics;
 using Microsoft.Xna.Framework.Input;
 using Blish_HUD.Input;
 using SharpDX.XInput;
+using System.Threading;
 
 namespace BhModule.TrueFisher.Automatic
 {
@@ -31,13 +32,26 @@ namespace BhModule.TrueFisher.Automatic
         public event EventHandler<ChangeEventArgs<bool>> HoleNeard;
         public event EventHandler<ChangeEventArgs<float>> ProgressionChanged;
 
+        public bool Enable
+        {
+            get => enable;
+            set
+            {
+                enable = value;
+                _holes.Clear();
+                holeInRange = false;
+            }
+        }
+        private bool enable = false;
         public FishState State { get => _state; }
         private FishState _state = FishState.UNKNOWN;
-        public bool HoleInRange { get => _holeInRange; }
-        private bool _holeInRange = false;
 
-        public Hole NearestHole { get => _nearestHole; }
-        private Hole _nearestHole = new Hole();
+        private double nextScanTick = 0;
+        public IReadOnlyList<Hole> Holes { get => _holes; }
+        private List<Hole> _holes = new List<Hole>();
+        public Hole NearestHole { get => Holes.OrderBy(p => p.Distance).FirstOrDefault(); }
+        public bool HoleInRange => holeInRange;
+        private bool holeInRange = false;
 
         public float Progression
         {
@@ -57,19 +71,51 @@ namespace BhModule.TrueFisher.Automatic
         public FishService(TrueFisherModule module)
         {
             this.module = module;
+            GameService.Gw2Mumble.CurrentMap.MapChanged += delegate { _holes.Clear(); };
         }
         public void Update(GameTime gameTime)
         {
+            if (!enable) return;
+            if (gameTime.TotalGameTime.TotalMilliseconds > nextScanTick)
+            {
+                nextScanTick = gameTime.TotalGameTime.TotalMilliseconds + 1000;
+                UpdateHolesInfo();
+            }
+
             UpdateState();
-            UpdateHoleInfo();
             UpdateYellowBarWidth();
             UpdateProgression();
+            CheckNearest();
         }
-        private void UpdateHoleInfo()
+        private void CheckNearest()
         {
-            _nearestHole.Position = new(-99999, -99999, -99999);
-            bool holeInRange = _nearestHole.Distance <= 600 && _nearestHole.Distance > 200;
-            EventUtil.CheckAndHandleEvent(ref _holeInRange, holeInRange, (evt) => HoleNeard?.Invoke(this, evt));
+            bool inRange = false;
+            if (NearestHole != null)
+            {
+                float distance = NearestHole.Distance;
+                inRange = distance <= 600 && distance > 200;
+            }
+            EventUtil.CheckAndHandleEvent(ref holeInRange, inRange, (evt) => HoleNeard?.Invoke(this, evt));
+        }
+        private void UpdateHolesInfo()
+        {
+
+            _holes.Clear();
+            IntPtr currentHole = DataService.Read<IntPtr>(FishMem.HolesStart).value;
+            IntPtr holeEnd = DataService.Read<IntPtr>(FishMem.HolesEnd).value;
+
+            while (currentHole.ToInt64() < holeEnd.ToInt64())
+            {
+                byte[] posBytes = MemUtil.ReadMem(DataService.Handle, currentHole, 12, [0xe8]).value;
+                float x = BitConverter.ToSingle(posBytes, 0);
+                float y = BitConverter.ToSingle(posBytes, 4);
+                float z = BitConverter.ToSingle(posBytes, 8);
+                _holes.Add(new Hole(new(x, y, z)));
+
+                currentHole = IntPtr.Add(currentHole, 0x8);
+            }
+            // prepare next scan
+            DataService.Write(FishMem.Scanned, [0]);
         }
         private void UpdateState()
         {
@@ -101,16 +147,12 @@ namespace BhModule.TrueFisher.Automatic
     }
     public class Hole
     {
-        public Vector3 Position = new Vector3(99999,99999,99999);
+        public Vector3 Position;
         public Vector2 HoleScreenPos { get => MapUtil.MapPosToScreenPos(Position); }
-
-        public double Distance
+        public float Distance { get => MapUtil.GetPlayerDistance(Position); }
+        public Hole(Vector3 pos)
         {
-            get
-            {
-                Vector3 playerPos = GameService.Gw2Mumble.PlayerCharacter.Position;
-                return MapUtil.GetDistance(Position.X, Position.Y, playerPos.X, playerPos.Y);
-            }
+            Position = pos;
         }
     }
 }

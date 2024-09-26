@@ -77,13 +77,6 @@ namespace BhModule.TrueFisher.Automatic
         }
         public void Update(GameTime gameTime)
         {
-            var a = GameService.Gw2Mumble;
-            var _b = playerPos.X;
-            var _c = playerPos.Y;
-
-            var b = BitConverter.GetBytes(playerPos.X);
-            var c = BitConverter.GetBytes(playerPos.Y);
-
             if (!Enable) return;
         }
         public void Unload()
@@ -91,7 +84,7 @@ namespace BhModule.TrueFisher.Automatic
             SetUILang(originUILanguage);
         }
 
-        public void MoveTargetToScreenCenter(Vector2 screenPos)
+        public void FixCameraView(Vector2 screenPos)
         {
             float screenCenterX = GameService.Graphics.WindowWidth / 2;
             float screenCenterY = GameService.Graphics.WindowHeight / 2;
@@ -105,24 +98,21 @@ namespace BhModule.TrueFisher.Automatic
 
         public void CastLine()
         {
-            //if (!module.FishService.HoleInRange) return;
-            Vector3 holePos = module.DataService.ScanAvAgent();
-            //Vector2 resolution = GameService.Graphics.Resolution.ToVector2();
-            //if (holePos.X < 0 || holePos.Y < 0 || holePos.X > resolution.X || holePos.Y > resolution.Y)
-            //{
-            //    MoveTargetToScreenCenter(new(holePos.X, holePos.Y));
-            //}
-            // 轉3d座標成 screen
-            using (var gdctx = GameService.Graphics.LendGraphicsDeviceContext())
+            if (!module.FishService.HoleInRange) return;
+            Vector2 screenSize = GameService.Graphics.Resolution.ToVector2();
+            var targetHole = module.FishService.NearestHole;
+            if(targetHole == null) return;
+
+            // 平移矩陣 *旋轉矩陣 * 縮放矩陣 為世界矩正
+            Vector2 holeScreenPos = new Vector2(0, 0);
+            if (holeScreenPos.X < 0 || holeScreenPos.Y < 0 || holeScreenPos.X > screenSize.X || holeScreenPos.Y > screenSize.Y)
             {
-
-                Vector3 screenPosition = gdctx.GraphicsDevice.Viewport.Project(new Vector3(WorldUtil.GameToWorldCoord(GameService.Gw2Mumble.PlayerCharacter.Position.X), WorldUtil.GameToWorldCoord(GameService.Gw2Mumble.PlayerCharacter.Position.Y), WorldUtil.GameToWorldCoord(GameService.Gw2Mumble.PlayerCharacter.Position.Z))
-              , GameService.Gw2Mumble.PlayerCamera.Projection,
-               GameService.Gw2Mumble.PlayerCamera.View,
-                GameService.Gw2Mumble.PlayerCamera.PlayerView);
-                Mouse.SetPosition(((int)screenPosition.X), ((int)screenPosition.Y),true);
+                FixCameraView(holeScreenPos);
             }
+      
 
+
+            Mouse.SetPosition(((int)holeScreenPos.X), ((int)holeScreenPos.Y), true);
             Keyboard.Stroke(Skill_1);
             Thread.Sleep(50);
         }
@@ -154,14 +144,15 @@ namespace BhModule.TrueFisher.Automatic
         }
         public void Start()
         {
-            CastLine();
+            module.FishService.Enable = true;
             module.FishService.HoleNeard += OnHoldNeard;
             module.FishService.StateChanged += OnFishStateChange;
             module.FishService.ProgressionChanged += OnFishProgressionChange;
         }
         public void Stop()
         {
-            module.FishService.HoleNeard += OnHoldNeard;
+            module.FishService.Enable = false;
+            module.FishService.HoleNeard -= OnHoldNeard;
             module.FishService.StateChanged -= OnFishStateChange;
             module.FishService.ProgressionChanged -= OnFishProgressionChange;
         }

@@ -4,6 +4,7 @@ using System.Linq;
 using Microsoft.Xna.Framework;
 using System.Text;
 using System.Threading.Tasks;
+using Blish_HUD;
 
 namespace BhModule.TrueFisher.Utils
 {
@@ -14,6 +15,11 @@ namespace BhModule.TrueFisher.Utils
             double offsetX = x2 - x1;
             double offsetY = y2 - y1;
             return Math.Sqrt(Math.Pow(offsetX, 2) + Math.Pow(offsetY, 2));
+        }
+        public static float GetPlayerDistance(Vector3 pos)
+        {
+            Vector3 playerPos = GameService.Gw2Mumble.PlayerCharacter.Position / 0.254f;
+            return Vector3.Distance(playerPos, pos);
         }
         //用來取得是否要轉彎
         public static double GetAngle(Vector2 pos_1,Vector2 pos_2)
