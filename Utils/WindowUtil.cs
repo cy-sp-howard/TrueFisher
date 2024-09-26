@@ -1,5 +1,6 @@
 ﻿using Blish_HUD;
 using Blish_HUD.Controls;
+using Blish_HUD.Input;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -48,6 +49,30 @@ namespace BhModule.TrueFisher.Utils
             {
                 msgStartTime = DateTime.Now;
                 message = text;
+            }
+            protected override void OnLeftMouseButtonPressed(MouseEventArgs e)
+            {
+
+            }
+            protected override void OnLeftMouseButtonReleased(MouseEventArgs e)
+            {
+
+            }
+            protected override void OnMouseMoved(MouseEventArgs e)
+            {
+
+            }
+            protected override void OnRightMouseButtonPressed(MouseEventArgs e)
+            {
+
+            }
+            protected override void OnRightMouseButtonReleased(MouseEventArgs e)
+            {
+
+            }
+            protected override void OnMouseWheelScrolled(MouseEventArgs e)
+            {
+
             }
         }
     }
