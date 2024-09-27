@@ -98,17 +98,19 @@ namespace BhModule.TrueFisher.Automatic
 
         public void CastLine()
         {
-            return;
             if (!module.FishService.HoleInRange) return;
             Vector2 screenSize = GameService.Graphics.Resolution.ToVector2();
             var targetHole = module.FishService.NearestHole;
             if(targetHole == null) return;
 
-            // 平移矩陣 *旋轉矩陣 * 縮放矩陣 為世界矩正
-            Vector2 holeScreenPos = new Vector2(0, 0);
+
+            Vector2 holeScreenPos = targetHole.HoleScreenPos;
             if (holeScreenPos.X < 0 || holeScreenPos.Y < 0 || holeScreenPos.X > screenSize.X || holeScreenPos.Y > screenSize.Y)
             {
                 FixCameraView(holeScreenPos);
+                Thread.Sleep(50);
+                CastLine();
+                return;
             }
       
 
