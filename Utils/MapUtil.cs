@@ -45,6 +45,7 @@ namespace BhModule.TrueFisher.Utils
 
             var screenPosition = Vector4.Transform(new Vector3(0, 0, 0), transformMatrix);
             screenPosition /= screenPosition.W;
+            // 錯的需要轉成dpi調整後的尺寸
             int x = (int)((screenPosition.X + 1) * 0.5f * GameService.Graphics.WindowWidth);
             int y = (int)((screenPosition.Y - 1) * 0.5f * -1 * GameService.Graphics.WindowHeight);
 

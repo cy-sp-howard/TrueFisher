@@ -99,6 +99,7 @@ namespace BhModule.TrueFisher.Automatic
         public void CastLine()
         {
             if (!module.FishService.HoleInRange) return;
+            // 錯的需要轉成dpi調整後的尺寸
             Vector2 screenSize = GameService.Graphics.Resolution.ToVector2();
             var targetHole = module.FishService.NearestHole;
             if(targetHole == null) return;
