@@ -18,7 +18,7 @@ namespace BhModule.TrueFisher.Utils
         }
         public static float GetPlayerDistance(Vector3 pos)
         {
-            Vector3 playerPos = GameService.Gw2Mumble.PlayerCharacter.Position / 0.254f;
+            Vector3 playerPos = GameService.Gw2Mumble.PlayerCharacter.Position / 0.0254f;
             return Vector3.Distance(playerPos, pos);
         }
         //用來取得是否要轉彎
@@ -39,13 +39,12 @@ namespace BhModule.TrueFisher.Utils
         {
 
 
-            var modelMatrix = Matrix.CreateTranslation(pos);
+            var modelMatrix = Matrix.CreateTranslation(pos * 0.0254f);
             var transformMatrix = Matrix.Multiply(Matrix.Multiply(modelMatrix, GameService.Gw2Mumble.PlayerCamera.View),
                                                        GameService.Gw2Mumble.PlayerCamera.Projection);
 
             var screenPosition = Vector4.Transform(new Vector3(0, 0, 0), transformMatrix);
             screenPosition /= screenPosition.W;
-            // 錯的需要轉成dpi調整後的尺寸
             int x = (int)((screenPosition.X + 1) * 0.5f * GameService.Graphics.WindowWidth);
             int y = (int)((screenPosition.Y - 1) * 0.5f * -1 * GameService.Graphics.WindowHeight);
 

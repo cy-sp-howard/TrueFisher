@@ -98,9 +98,9 @@ namespace BhModule.TrueFisher.Automatic
 
         public void CastLine()
         {
+            if (module.FishService.State != FishState.UNKNOWN) return;
             if (!module.FishService.HoleInRange) return;
-            // 錯的需要轉成dpi調整後的尺寸
-            Vector2 screenSize = GameService.Graphics.Resolution.ToVector2();
+            Point screenSize = GameService.Graphics.SpriteScreen.Size;
             var targetHole = module.FishService.NearestHole;
             if(targetHole == null) return;
 
@@ -110,13 +110,12 @@ namespace BhModule.TrueFisher.Automatic
             {
                 FixCameraView(holeScreenPos);
                 Thread.Sleep(50);
-                CastLine();
-                return;
             }
       
 
 
-            Mouse.SetPosition(((int)holeScreenPos.X), ((int)holeScreenPos.Y), true);
+            Mouse.SetPosition(((int)holeScreenPos.X), ((int)holeScreenPos.Y), false);
+            Thread.Sleep(10);
             Keyboard.Stroke(Skill_1);
             Thread.Sleep(50);
         }
@@ -139,7 +138,11 @@ namespace BhModule.TrueFisher.Automatic
         private void OnFishStateChange(object sender, ChangeEventArgs<FishState> evt)
         {
             if (evt.Current == FishState.READY) SetHook();
-            else if (evt.Current == FishState.UNKNOWN) CastLine();
+            else if (evt.Current == FishState.UNKNOWN)
+            {
+                Thread.Sleep(5000);
+                CastLine();
+            }
         }
         private void OnFishProgressionChange(object sender, ChangeEventArgs<float> evt)
         {

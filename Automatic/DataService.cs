@@ -194,10 +194,10 @@ namespace BhModule.TrueFisher.Automatic
     public class MemTrail
     {
         public IntPtr StartAddress { get => IntPtr.Add(BaseAddress, FirstOffset); }
-        public IntPtr BaseAddress { get => _baseAddress == null? DataService.AgentDLL.AddressData: _baseAddress; }
+        public IntPtr BaseAddress { get => (_baseAddress == IntPtr.Zero ? DataService.AgentDLL.AddressData : _baseAddress); }
         public IReadOnlyList<int> Offset { get => _offset.AsReadOnly(); }
         public int FirstOffset { get; private set; }
-        public IntPtr _baseAddress;
+        public IntPtr _baseAddress = IntPtr.Zero;
         private List<int> _offset = new();
         public MemTrail(int firstOffset, int[] offset)
         {

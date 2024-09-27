@@ -26,8 +26,8 @@ namespace BhModule.TrueFisher.Utils
         {
             if (!Equals(previousValue, currentValue))
             {
-                eventRef(new ChangeEventArgs<T>(currentValue, previousValue));
                 previousValue = currentValue;
+                eventRef(new ChangeEventArgs<T>(currentValue, previousValue));
             }
         }
     }
