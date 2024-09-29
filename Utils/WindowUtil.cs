@@ -57,22 +57,6 @@ namespace BhModule.TrueFisher.Utils
                 return CaptureType.None;
             }
         }
-        public class Dot : Control
-        {
-            public Dot()
-            {
-                Parent = GameService.Graphics.SpriteScreen;
-                Size = new Point(50 ,50);
 
-            }
-            protected override void Paint(SpriteBatch spriteBatch, Rectangle bounds)
-            {
-                spriteBatch.DrawOnCtrl(this, ContentService.Textures.Pixel, new Rectangle(0, 0, Size.X, Size.Y), Color.DarkGray);
-            }
-            protected override CaptureType CapturesInput()
-            {
-                return CaptureType.None;
-            }
-        }
     }
 }

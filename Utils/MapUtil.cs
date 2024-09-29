@@ -18,8 +18,9 @@ namespace BhModule.TrueFisher.Utils
         }
         public static float GetPlayerDistance(Vector3 pos)
         {
-            Vector3 playerPos = GameService.Gw2Mumble.PlayerCharacter.Position / 0.0254f;
-            return Vector3.Distance(playerPos, pos);
+            // pos-> in
+            // return-> in
+            return Vector3.Distance(GameService.Gw2Mumble.PlayerCharacter.Position / 0.0254f, pos);
         }
         //用來取得是否要轉彎
         public static double GetAngle(Vector2 pos_1, Vector2 pos_2)
@@ -34,12 +35,9 @@ namespace BhModule.TrueFisher.Utils
             return angleDiff;
 
         }
-        //將地圖座標 轉成現在螢幕座標
         public static Vector2 MapPosToScreenPos(Vector3 pos)
         {
-
-
-            var modelMatrix = Matrix.CreateTranslation(pos * 0.0254f);
+            var modelMatrix = Matrix.CreateTranslation(pos * 0.0254f); // in to m
             var transformMatrix = Matrix.Multiply(Matrix.Multiply(modelMatrix, GameService.Gw2Mumble.PlayerCamera.View),
                                                        GameService.Gw2Mumble.PlayerCamera.Projection);
 

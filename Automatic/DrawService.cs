@@ -41,8 +41,18 @@ namespace BhModule.TrueFisher.Automatic
         }
         public void Update(GameTime gameTime)
         {
-
-
+            float scaleRate = GameService.Graphics.UIScaleMultiplier; // screen.width * scake = window.width
+            foreach (var dot in controlCollection)
+            {
+                dot.Parent = null;
+            }
+            controlCollection.Clear();
+            foreach (var hole in module.FishService.Holes)
+            {
+                var dot = new Dot();
+                controlCollection.Add(dot);
+                dot.Location = new Point((int)(hole.HoleScreenPos.X / scaleRate), (int)(hole.HoleScreenPos.Y / scaleRate));
+            }
 
         }
         public void Unload()
@@ -60,6 +70,23 @@ namespace BhModule.TrueFisher.Automatic
         }
 
 
+    }
+    public class Dot : Control
+    {
+        public Dot()
+        {
+            Parent = GameService.Graphics.SpriteScreen;
+            Size = new Point(50, 50);
+
+        }
+        protected override void Paint(SpriteBatch spriteBatch, Rectangle bounds)
+        {
+            spriteBatch.DrawOnCtrl(this, ContentService.Textures.Pixel, new Rectangle(0, 0, Size.X, Size.Y), Color.DarkGray);
+        }
+        protected override CaptureType CapturesInput()
+        {
+            return CaptureType.None;
+        }
     }
     public class CenterDot : Control
     {

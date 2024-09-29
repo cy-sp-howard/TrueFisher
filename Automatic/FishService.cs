@@ -93,7 +93,7 @@ namespace BhModule.TrueFisher.Automatic
             if (NearestHole != null)
             {
                 float distance = NearestHole.Distance;
-                inRange = distance <= 600 && distance > 200;
+                inRange = distance <= 825 && distance >= 100;
             }
             EventUtil.CheckAndHandleEvent(ref holeInRange, inRange, (evt) => HoleNeard?.Invoke(this, evt));
         }
