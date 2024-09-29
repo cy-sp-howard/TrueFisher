@@ -76,12 +76,12 @@ namespace BhModule.TrueFisher.Automatic
         public Dot()
         {
             Parent = GameService.Graphics.SpriteScreen;
-            Size = new Point(50, 50);
+            Size = new Point(5, 5);
 
         }
         protected override void Paint(SpriteBatch spriteBatch, Rectangle bounds)
         {
-            spriteBatch.DrawOnCtrl(this, ContentService.Textures.Pixel, new Rectangle(0, 0, Size.X, Size.Y), Color.DarkGray);
+            spriteBatch.DrawOnCtrl(this, ContentService.Textures.Pixel, new Rectangle(0, 0, Size.X, Size.Y), Color.Yellow);
         }
         protected override CaptureType CapturesInput()
         {

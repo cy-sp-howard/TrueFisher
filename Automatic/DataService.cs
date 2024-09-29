@@ -185,6 +185,7 @@ namespace BhModule.TrueFisher.Automatic
         public static readonly int Skill_3 = 0x17;
         public static readonly int Interact = 0x6D;
         public static readonly int Anchor = 0x1E;
+        public static readonly int AboutFace = 12;
         public static readonly int TurnLeft = 2;
         public static readonly int TurnRight = 3;
         public static readonly int MoveForward = 0;

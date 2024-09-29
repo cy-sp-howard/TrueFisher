@@ -14,6 +14,8 @@ using Microsoft.Xna.Framework.Input;
 using Blish_HUD.Input;
 using SharpDX.XInput;
 using System.Threading;
+using Blish_HUD.ArcDps.Models;
+using MonoGame.Extended.Timers;
 
 namespace BhModule.TrueFisher.Automatic
 {
@@ -31,6 +33,7 @@ namespace BhModule.TrueFisher.Automatic
         public event EventHandler<ChangeEventArgs<FishState>> StateChanged;
         public event EventHandler<ChangeEventArgs<bool>> HoleNeard;
         public event EventHandler<ChangeEventArgs<float>> ProgressionChanged;
+        public event EventHandler<ChangeEventArgs<int>> NextUpdated;
 
         public bool Enable
         {
@@ -99,7 +102,7 @@ namespace BhModule.TrueFisher.Automatic
         }
         private void UpdateHolesInfo()
         {
-
+            int holeLen= _holes.Count;
             _holes.Clear();
             IntPtr currentHole = DataService.Read<IntPtr>(FishMem.HolesStart).value;
             IntPtr holeEnd = DataService.Read<IntPtr>(FishMem.HolesEnd).value;
@@ -116,6 +119,8 @@ namespace BhModule.TrueFisher.Automatic
             }
             // prepare next scan
             DataService.Write(FishMem.Scanned, [0]);
+            NextUpdated?.Invoke(this, new ChangeEventArgs<int>(_holes.Count, holeLen));
+            NextUpdated = null;
         }
         private void UpdateState()
         {

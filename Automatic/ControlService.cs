@@ -50,6 +50,7 @@ namespace BhModule.TrueFisher.Automatic
         public VirtualKeyShort Skill_3 { get => GetGameBindButton(SettingMem.Skill_3); }
         public VirtualKeyShort Interact { get => GetGameBindButton(SettingMem.Interact); }
         public VirtualKeyShort Anchor { get => GetGameBindButton(SettingMem.Anchor); }
+        public VirtualKeyShort AboutFace { get => GetGameBindButton(SettingMem.AboutFace); }
 
 
 
@@ -84,37 +85,22 @@ namespace BhModule.TrueFisher.Automatic
             SetUILang(originUILanguage);
         }
 
-        public void FixCameraView(Vector2 screenPos)
-        {
-            float screenCenterX = GameService.Graphics.WindowWidth / 2;
-            float screenCenterY = GameService.Graphics.WindowHeight / 2;
-            float moveX = screenPos.X - screenCenterX;
-            float moveY = screenPos.Y - screenCenterY;
-
-            Mouse.Press(MouseButton.LEFT, (int)screenCenterX, (int)screenCenterY);
-            Mouse.Release(MouseButton.LEFT, (int)(screenCenterX + moveX), (int)(screenCenterY + moveY));
-
-        }
-
         public void CastLine()
         {
             if (module.FishService.State != FishState.UNKNOWN) return;
             if (!module.FishService.HoleInRange) return;
-            Point screenSize = GameService.Graphics.SpriteScreen.Size;
             var targetHole = module.FishService.NearestHole;
-            if(targetHole == null) return;
+            if (targetHole == null) return;
 
 
             Vector2 holeScreenPos = targetHole.HoleScreenPos;
-            if (holeScreenPos.X < 0 || holeScreenPos.Y < 0 || holeScreenPos.X > screenSize.X || holeScreenPos.Y > screenSize.Y)
+            if (holeScreenPos.X < 0 || holeScreenPos.Y < 0 || holeScreenPos.X > GameService.Graphics.WindowWidth || holeScreenPos.Y > GameService.Graphics.WindowHeight)
             {
-                FixCameraView(holeScreenPos);
-                Thread.Sleep(50);
+                Keyboard.Stroke(AboutFace);
+                module.FishService.NextUpdated += delegate { CastLine(); };
+                return;
             }
-      
-
-
-            Mouse.SetPosition(((int)holeScreenPos.X), ((int)holeScreenPos.Y), false);
+            Mouse.SetPosition(((int)holeScreenPos.X), ((int)holeScreenPos.Y));
             Thread.Sleep(10);
             Keyboard.Stroke(Skill_1);
             Thread.Sleep(50);
