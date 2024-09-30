@@ -1,21 +1,11 @@
 ﻿using Blish_HUD;
-using Blish_HUD.Controls;
 using Blish_HUD.Modules;
 using Blish_HUD.Modules.Managers;
 using Blish_HUD.Settings;
-using Blish_HUD.Settings.UI.Views;
 using Microsoft.Xna.Framework;
-using System;
 using System.ComponentModel.Composition;
-using System.Runtime;
 using System.Threading.Tasks;
-using BhModule.TrueFisher.Utils;
 using BhModule.TrueFisher.Automatic;
-using SharpDX.Direct3D11;
-using System.Diagnostics;
-using System.Collections.Generic;
-using MonoGame.Extended.Timers;
-using System.Security.Cryptography;
 
 namespace BhModule.TrueFisher
 {

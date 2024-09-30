@@ -2,20 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using BhModule.TrueFisher.Utils;
 using Blish_HUD;
-using SharpDX.MediaFoundation;
-using Microsoft.Xna.Framework.Graphics.PackedVector;
-using Blish_HUD.Controls.Extern;
-using System.Diagnostics;
-using Microsoft.Xna.Framework.Input;
-using Blish_HUD.Input;
-using SharpDX.XInput;
-using System.Threading;
-using Blish_HUD.ArcDps.Models;
-using MonoGame.Extended.Timers;
 
 namespace BhModule.TrueFisher.Automatic
 {

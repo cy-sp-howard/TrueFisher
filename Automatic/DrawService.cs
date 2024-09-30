@@ -3,18 +3,8 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Blish_HUD;
-using System.IO;
-using System.Diagnostics;
 using Blish_HUD.Controls;
-using Microsoft.Xna.Framework.Input;
-using Blish_HUD.Entities;
-using BhModule.TrueFisher.Utils;
-using System.Net;
-using System.Runtime.InteropServices;
-using System.Security.Cryptography;
 
 namespace BhModule.TrueFisher.Automatic
 {

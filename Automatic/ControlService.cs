@@ -2,18 +2,12 @@
 using Blish_HUD;
 using Blish_HUD.Controls.Extern;
 using Blish_HUD.Controls.Intern;
-using Blish_HUD.Input;
 using Gw2Sharp.Models;
 using Microsoft.Xna.Framework;
-using SharpDX.DirectWrite;
-using SharpDX.MediaFoundation;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace BhModule.TrueFisher.Automatic
 {

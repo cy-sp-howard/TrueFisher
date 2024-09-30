@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
-using BhModule.TrueFisher.Utils;
-using Blish_HUD.Controls.Extern;
+﻿using BhModule.TrueFisher.Utils;
 using Blish_HUD.Input;
 using Blish_HUD.Settings;
 using Microsoft.Xna.Framework.Input;

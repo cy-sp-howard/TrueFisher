@@ -1,29 +1,13 @@
-﻿using AsyncWindowsClipboard.Clipboard.Native;
-using BhModule.TrueFisher.Utils;
+﻿using BhModule.TrueFisher.Utils;
 using Blish_HUD;
-using Blish_HUD.ArcDps;
-using Blish_HUD.ArcDps.Models;
-using Blish_HUD.Gw2Mumble;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Graphics.PackedVector;
-using Microsoft.Xna.Framework.Input;
-using SharpDX.MediaFoundation;
 using System;
 using System.Collections.Generic;
-using System.Configuration.Assemblies;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Reflection;
-using System.Resources;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Timers;
-using TmfLib.Pathable;
 
 namespace BhModule.TrueFisher.Automatic
 {
