@@ -90,7 +90,7 @@ namespace BhModule.TrueFisher.Automatic
         }
         private void UpdateHolesInfo()
         {
-            int holeLen= _holes.Count;
+            int holeLen = _holes.Count;
             _holes.Clear();
             IntPtr currentHole = DataService.Read<IntPtr>(FishMem.HolesStart).value;
             IntPtr holeEnd = DataService.Read<IntPtr>(FishMem.HolesEnd).value;
@@ -101,7 +101,7 @@ namespace BhModule.TrueFisher.Automatic
                 float x = BitConverter.ToSingle(posBytes, 0);
                 float y = BitConverter.ToSingle(posBytes, 4);
                 float z = BitConverter.ToSingle(posBytes, 8) * -1;
-                _holes.Add(new Hole(new(x, y, z)));
+                _holes.Add(new Hole(currentHole, new(x, y, z)));
 
                 currentHole = IntPtr.Add(currentHole, 0x8);
             }
@@ -140,12 +140,14 @@ namespace BhModule.TrueFisher.Automatic
     }
     public class Hole
     {
+        public IntPtr Address;
         public Vector3 Position;
         public Vector2 ScreenPos { get => MapUtil.MapPosToScreenPos(Position); }
         public float Distance { get => MapUtil.GetPlayerDistance(Position); }
-        public Hole(Vector3 pos)
+        public Hole(IntPtr addr, Vector3 pos)
         {
             Position = pos;
+            Address = addr;
         }
     }
 }

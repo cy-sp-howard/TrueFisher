@@ -69,8 +69,8 @@ namespace BhModule.TrueFisher.Automatic
                 float x = BitConverter.ToSingle(posBytes, 0);
                 float y = BitConverter.ToSingle(posBytes, 4);
                 float z = BitConverter.ToSingle(posBytes, 8) * -1;
-                var node = new Hole(new(x, y, z));
-                if (node.Distance <= 1000)
+                var node = new Hole(currentNode, new(x, y, z));
+                if (node.Distance <= 5000)
                 {
                     nodes.Add(node);
                 }
