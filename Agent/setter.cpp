@@ -229,7 +229,9 @@ void SetAvAgent() {
 			avAgentGadgets.push_back(avAgent);
 			uintptr_t gadget = *(uintptr_t*)(avAgent + 0xC0);
 			int nodeType = *(int*)(gadget + 0x4d8 + 0xc);
-			if (nodeType == 0x3) {
+			int nodeFlags = *(int*)(gadget + 0x4d8 + 0x10);
+			int emptyFlag = 1 << 1;
+			if (nodeType == 0x3 && !(nodeFlags & emptyFlag)) {
 				avAgentGadgetFishHoles.push_back(avAgent);
 			}
 
