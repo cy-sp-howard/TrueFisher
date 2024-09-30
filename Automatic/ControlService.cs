@@ -87,7 +87,7 @@ namespace BhModule.TrueFisher.Automatic
             if (targetHole == null) return;
 
 
-            Vector2 holeScreenPos = targetHole.HoleScreenPos;
+            Vector2 holeScreenPos = targetHole.ScreenPos;
             if (holeScreenPos.X < 0 || holeScreenPos.Y < 0 || holeScreenPos.X > GameService.Graphics.WindowWidth || holeScreenPos.Y > GameService.Graphics.WindowHeight)
             {
                 Keyboard.Stroke(AboutFace);

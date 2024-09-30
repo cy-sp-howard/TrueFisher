@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Blish_HUD;
 using Blish_HUD.Controls;
+using BhModule.TrueFisher.Utils;
 
 namespace BhModule.TrueFisher.Automatic
 {
@@ -17,6 +18,8 @@ namespace BhModule.TrueFisher.Automatic
         private Blish_HUD.Modules.Module pathingModule { get => GameService.Module.Modules.ToList().Find(i => i.ModuleInstance.Name == "Pathing")?.ModuleInstance; }
 
         private List<Control> controlCollection = new List<Control>();
+        private List<Hole> nodes = new List<Hole>();
+        private double nextScanTick = 0;
         public DrawService(TrueFisherModule module)
         {
             this.module = module;
@@ -31,23 +34,50 @@ namespace BhModule.TrueFisher.Automatic
         }
         public void Update(GameTime gameTime)
         {
+            if (gameTime.TotalGameTime.TotalMilliseconds > nextScanTick)
+            {
+                nextScanTick = gameTime.TotalGameTime.TotalMilliseconds + 5000;
+                getResources();
+            }
             float scaleRate = GameService.Graphics.UIScaleMultiplier; // screen.width * scake = window.width
             foreach (var dot in controlCollection)
             {
                 dot.Parent = null;
             }
             controlCollection.Clear();
-            foreach (var hole in module.FishService.Holes)
+            foreach (var node in nodes)
             {
                 var dot = new Dot();
                 controlCollection.Add(dot);
-                dot.Location = new Point((int)(hole.HoleScreenPos.X / scaleRate), (int)(hole.HoleScreenPos.Y / scaleRate));
+                dot.Location = new Point((int)(node.ScreenPos.X / scaleRate), (int)(node.ScreenPos.Y / scaleRate));
             }
 
         }
         public void Unload()
         {
 
+        }
+        void getResources()
+        {
+            nodes.Clear();
+            IntPtr currentNode = DataService.Read<IntPtr>(NodeMem.Start).value;
+            IntPtr nodeEnd = DataService.Read<IntPtr>(NodeMem.End).value;
+
+            while (currentNode.ToInt64() < nodeEnd.ToInt64())
+            {
+                byte[] posBytes = MemUtil.ReadMem(DataService.Handle, currentNode, 12, [0xe8]).value;
+                float x = BitConverter.ToSingle(posBytes, 0);
+                float y = BitConverter.ToSingle(posBytes, 4);
+                float z = BitConverter.ToSingle(posBytes, 8) * -1;
+                var node = new Hole(new(x, y, z));
+                if (node.Distance <= 1000)
+                {
+                    nodes.Add(node);
+                }
+                currentNode = IntPtr.Add(currentNode, 0x8);
+            }
+            // prepare next scan
+            DataService.Write(FishMem.Scanned, [0]);
         }
         public void DrawCenterDot()
         {

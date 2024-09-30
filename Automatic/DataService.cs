@@ -157,6 +157,11 @@ namespace BhModule.TrueFisher.Automatic
         public static MemTrail HolesEnd => new(0x68, [0x10]);
         public static MemTrail Scanned => new(0x38);
     }
+    public static class NodeMem
+    {
+        public static MemTrail Start => new(0x48, [0x8]);
+        public static MemTrail End => new(0x48, [0x10]);
+    }
 
     public static class SettingMem
     {

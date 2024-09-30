@@ -100,7 +100,7 @@ namespace BhModule.TrueFisher.Automatic
                 byte[] posBytes = MemUtil.ReadMem(DataService.Handle, currentHole, 12, [0xe8]).value;
                 float x = BitConverter.ToSingle(posBytes, 0);
                 float y = BitConverter.ToSingle(posBytes, 4);
-                float z = BitConverter.ToSingle(posBytes, 8);
+                float z = BitConverter.ToSingle(posBytes, 8) * -1;
                 _holes.Add(new Hole(new(x, y, z)));
 
                 currentHole = IntPtr.Add(currentHole, 0x8);
@@ -141,7 +141,7 @@ namespace BhModule.TrueFisher.Automatic
     public class Hole
     {
         public Vector3 Position;
-        public Vector2 HoleScreenPos { get => MapUtil.MapPosToScreenPos(Position); }
+        public Vector2 ScreenPos { get => MapUtil.MapPosToScreenPos(Position); }
         public float Distance { get => MapUtil.GetPlayerDistance(Position); }
         public Hole(Vector3 pos)
         {
