@@ -4,7 +4,7 @@
 
 extern ADDRESS address;
 extern Console console;
-extern std::unordered_map<std::string, uintptr_t> staticAddress;
+extern std::unordered_map<std::string, uintptr_t> refStringAddress;
 
 std::vector<uintptr_t> keyBind0;
 std::vector<uintptr_t> keyBind1;
@@ -14,7 +14,12 @@ std::vector<uintptr_t> avAgentAttackGadgets;
 std::vector<uintptr_t> avAgentItems;
 std::vector<uintptr_t> avAgentUnknown;
 std::vector<uintptr_t> avAgentGadgetFishHoles;
+std::vector<uintptr_t> avAgentGadgetResourceNodes;
 
+void printOffset(const char* str, uintptr_t* addr) {
+	long long offset = (long long)addr - ((long long)&address);
+	console.printf("%s: 0x%X, %p\n", str, offset, *addr);
+}
 // No valid case for switch variable 'EState' 取參考此地址的function +0x78 進入call目標地址 + D2 得(59c892 會取的偏移植)
 // Gw2-64.exe+59EE67 - lea rcx,[Gw2-64.exe+26EC0D0] 取得 固定值A
 // Gw2-64.exe+59EE6E - call Gw2-64.exe+59C7C0
@@ -30,7 +35,7 @@ std::vector<uintptr_t> avAgentGadgetFishHoles;
 // Gw2-64.exe+59C8E5 - Gw2-64.exe+5A2E01 - mov eax,[rcx+24] // 讀取按鍵code([rcx+10+24] 或[rcx+60+24])
 // Gw2-64.exe+59CA8B - cmp ebp,000000E5  index 上限
 void SetKeyBindsAddr() {
-	uintptr_t keyBindsStart = staticAddress["No valid case for switch variable 'EState'"];
+	uintptr_t keyBindsStart = refStringAddress["No valid case for switch variable 'EState'"] + 0x71;
 	// Gw2-64.exe+59EE67 - lea rcx,[Gw2-64.exe+26EC0D0]
 	uintptr_t keyBindsBase = FollowRelativeAddress(keyBindsStart);
 	// Gw2-64.exe+59EE6E - call Gw2-64.exe+59C7C0
@@ -39,12 +44,12 @@ void SetKeyBindsAddr() {
 	// Gw2-64.exe+59C8D8 - call qword ptr [rax+20] // call [[rsi]+20] (arg0=rsi,arg1=0|1)取得 是1號按鍵 還是2號按鍵
 	// Gw2-64.exe+59C8D8 - Gw2-64.exe+5A3A3F - lea rax,[rcx+10]  // arg1 為0+10
 	// Gw2-64.exe+59C8D8 - Gw2-64.exe+5A3A36 - lea rax,[rcx+60]  // arg1 為0+60
-	uintptr_t invalidHint = staticAddress["No valid case for switch variable 'EBind'"];
+	uintptr_t invalidHint = refStringAddress["No valid case for switch variable 'EBind'"];
 	int keyBindAddrOffset0 = (int)(*(char*)(invalidHint + 0x22));
 	int keyBindAddrOffset1 = (int)(*(char*)(invalidHint + 0x19));
 	// Gw2-64.exe+59CA8B - cmp ebp,000000E5  index 上限
 
-	int max = *((int*)(staticAddress["!(primaryEqual && secondaryEqual)"] + 0x55));
+	int max = *((int*)(refStringAddress["!(primaryEqual && secondaryEqual)"] + 0x55));
 	keyBind0.assign(max, 0);
 	keyBind1.assign(max, 0);
 	for (int i = 0; i < max; i++)
@@ -71,13 +76,14 @@ void SetKeyBindsAddr() {
 	}
 	address.keyBind0 = (uintptr_t)keyBind0.data();
 	address.keyBind1 = (uintptr_t)keyBind1.data();
-	console.printf("keyBind ary0: %p\n", address.keyBind0);
-	console.printf("keyBind ary1: %p\n", address.keyBind1);
+
+	printOffset("keyBind ary0", &address.keyBind0);
+	printOffset("keyBind ary1", &address.keyBind1);
 
 }
 void SetMapStateAddr() {
 
-	uintptr_t getMapStatePtr = staticAddress["ViewAdvanceUi"];
+	uintptr_t getMapStatePtr = FollowRelativeAddress(refStringAddress["ViewAdvanceUi"] + 0xA);
 	// Gw2-64.exe+672763 - call Gw2-64.exe+6E15F0
 	uintptr_t baseAddr = ((uintptr_t(__thiscall*)())getMapStatePtr)();
 	uintptr_t func = *((uintptr_t*)(*(uintptr_t*)baseAddr + 0x8));
@@ -85,12 +91,11 @@ void SetMapStateAddr() {
 	char offset = *(char*)(func + 0x8);
 	address.mapState = baseAddr + offset;
 
-	console.printf("map state: %p\n", address.mapState);
+	printOffset("map state", &address.mapState);
 
 }
 void SetLangAddr() {
-
-	uintptr_t setLangFuncPtr = staticAddress["ValidateLanguage(language)"]; //504a90
+	uintptr_t setLangFuncPtr = FollowRelativeAddress(refStringAddress["ValidateLanguage(language)"] + 0x24); //504a90
 	//Gw2-64.exe+504A98 - call Gw2-64.exe+2432B0	
 	auto getBase = (uintptr_t(__thiscall*)())FollowRelativeAddress(setLangFuncPtr + 0x9);
 	//Gw2-64.exe+504A9D - mov rdx,[rax+50]
@@ -101,15 +106,15 @@ void SetLangAddr() {
 	uintptr_t base2Ptr = *(uintptr_t*)(basePtr + addrOffset1);
 	address.lang = base2Ptr + addrOffset2;
 
-	console.printf("lang: %p\n", address.lang);
+	printOffset("lang", &address.lang);
 
 }
 void SetFishAddr() {
-	uintptr_t getBaseAddr = FollowRelativeAddress(staticAddress["!m_state.TestBits(FLAG_ENTER_GAME)"] + 0x55);
+	uintptr_t getBaseAddr = FollowRelativeAddress(refStringAddress["!m_state.TestBits(FLAG_ENTER_GAME)"] + 0x55);
 	uintptr_t baseAddr = ((uintptr_t(__thiscall*)())getBaseAddr)();
 
 	// Gw2-64.exe+6D88FE - call qword ptr [rdx+40]
-	int callOffset = (int)(*(char*)(staticAddress["!m_state.TestBits(FLAG_ENTER_GAME)"] + 0x61));
+	int callOffset = (int)(*(char*)(refStringAddress["!m_state.TestBits(FLAG_ENTER_GAME)"] + 0x61));
 	uintptr_t callAddr = *(uintptr_t*)((*(uintptr_t*)baseAddr) + callOffset);
 	// Gw2-64.exe+7557BE - mov rcx,[rbx+000000D0]
 	int chararcterOffset = *(int*)(callAddr + 0x61);
@@ -118,7 +123,7 @@ void SetFishAddr() {
 
 
 	// Gw2-64.exe+128424D - call qword ptr [rax+000002C0]
-	int chararcterFuncAry0_offset = *(int*)(staticAddress["progressToCheck"] + 0x2C);
+	int chararcterFuncAry0_offset = *(int*)(refStringAddress["progressToCheck"] + 0x2C);
 	uintptr_t getFishBase = *(uintptr_t*)(chararcterFuncAry0 + chararcterFuncAry0_offset);
 	uintptr_t base = ((uintptr_t(__thiscall*)(uintptr_t))(getFishBase))(selfCharacter);
 
@@ -126,12 +131,13 @@ void SetFishAddr() {
 	// Gw2-64.exe+12DCE18 - mov rcx,[rbx+28]
 	int fishOffset = 0x5c78 + 0x28;
 	address.fish = base + fishOffset;
-	console.printf("fish: %p\n", address.fish);
+
+	printOffset("fish", &address.fish);
 
 	//F3 0F 5E 05 ?? ?? ?? ?? F3 0F 5E 05 ?? ?? ?? ?? E8 ?? ?? ?? ?? 33 ED 0F 2F 05 設定 fish state ready
 
 
-	//auto getBase = (uintptr_t(__thiscall*)())(staticAddress["ViewAdvanceCharacter"]);
+	//auto getBase = (uintptr_t(__thiscall*)())(FollowRelativeAddress(refStringAddress["ViewAdvanceCharacter"] + 0xA));
 	//uintptr_t baseAddr = *(uintptr_t*)(getBase() + 0x98);
 	//uintptr_t loopStartAddr = *(uintptr_t*)(baseAddr + 0x60);
 	//uintptr_t loopEndAddr = loopStartAddr + (*(int*)(baseAddr + 0x6C)) * 8;
@@ -202,10 +208,11 @@ void SetAvAgent() {
 	avAgentAttackGadgets.clear();
 	avAgentItems.clear();
 	avAgentUnknown.clear();
+	avAgentGadgetResourceNodes.clear();
 
-	uintptr_t loopFunc = FollowRelativeAddress(staticAddress["avAgentArray"] + 0x16);
+	uintptr_t loopFunc = FollowRelativeAddress(refStringAddress["avAgentArray"] + 0x16);
 	// Gw2-64.exe+6B7A8F - call Gw2-64.exe+136CA50
-	uintptr_t arrayInfo = FollowRelativeAddress(FollowRelativeAddress(staticAddress["ViewAdvanceAgentView"] + 0xA) + 0x3);
+	uintptr_t arrayInfo = FollowRelativeAddress(FollowRelativeAddress(refStringAddress["ViewAdvanceAgentView"] + 0xA) + 0x3);
 	// Gw2-64.exe+136C816 - lea rcx,[rsi+68]
 	// Gw2-64.exe+136C81F - call Gw2-64.exe+139A950
 	// Gw2-64.exe+136C81F - Gw2-64.exe+139A95F - mov rbx,[rcx+08]  // 取得第0個item
@@ -220,6 +227,8 @@ void SetAvAgent() {
 		// Gw2-64.exe+139A9B2 - mov rax,[rcx] //取得avagent 的funcArray 
 		uintptr_t avAgentFuncAry = *(uintptr_t*)avAgent;
 		// Gw2-64.exe+139A9B5 - call qword ptr [rax+00000140] //取得type (arg0=avagent)
+		// D:\Perforce\Live\NAEU\v2\Code\Gw2\Game\AgentView\AvManager.cpp 第三個參考 +0x29
+		// characterArray參考 +13 該func addr +65 ->call qword ptr [rax+00000140] 
 		uintptr_t getAgentType = *(uintptr_t*)(avAgentFuncAry + 0x140);
 		int type = ((int(__thiscall*)(uintptr_t))getAgentType)(avAgent);
 		if (type == 0x0) {
@@ -228,11 +237,16 @@ void SetAvAgent() {
 		else if (type == 0xA) {
 			avAgentGadgets.push_back(avAgent);
 			uintptr_t gadget = *(uintptr_t*)(avAgent + 0xC0);
+			// resourceNode->GetGatherType() < Content::GATHERING_TYPES || markerFileId 參考 - 0x55 call 取得 resource (gadget+4d8) 
+			// resourceNode->GetGatherType() < Content::GATHERING_TYPES || markerFileId 參考 - 0x1c call 取得 GatherType (resource+c) 
 			int nodeType = *(int*)(gadget + 0x4d8 + 0xc);
 			int nodeFlags = *(int*)(gadget + 0x4d8 + 0x10);
 			int aliveFlag = 1 << 1;
-			if (nodeType == 0x3 && (aliveFlag & nodeFlags) > 0) {
-				avAgentGadgetFishHoles.push_back(avAgent);
+			if ((aliveFlag & nodeFlags) > 0) {
+				avAgentGadgetResourceNodes.push_back(avAgent);
+				if (nodeType == 0x3) {
+					avAgentGadgetFishHoles.push_back(avAgent);
+				}
 			}
 
 		}
@@ -257,12 +271,15 @@ void SetAvAgent() {
 		address.avAgentF = (uintptr_t)&avAgentItems;
 		address.avAgentU = (uintptr_t)&avAgentUnknown;
 		address.avAgentH = (uintptr_t)&avAgentGadgetFishHoles;
-		console.printf("avAgent ary0: %p\n", address.avAgent0);
-		console.printf("avAgent aryA: %p\n", address.avAgentA);
-		console.printf("avAgent aryH: %p\n", address.avAgentH);
-		console.printf("avAgent aryB: %p\n", address.avAgentB);
-		console.printf("avAgent aryF: %p\n", address.avAgentF);
-		console.printf("avAgent aryU: %p\n", address.avAgentU);
+		address.avAgentR = (uintptr_t)&avAgentGadgetResourceNodes;
+
+		printOffset("avAgent ary0", &address.avAgent0);
+		printOffset("avAgent aryA", &address.avAgentA);
+		printOffset("avAgent aryH", &address.avAgentH);
+		printOffset("avAgent aryR", &address.avAgentR);
+		printOffset("avAgent aryB", &address.avAgentB);
+		printOffset("avAgent aryF", &address.avAgentF);
+		printOffset("avAgent aryU", &address.avAgentU);
 	}
 }
 

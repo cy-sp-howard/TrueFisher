@@ -18,6 +18,7 @@ struct ADDRESS {
 	uintptr_t avAgentF = 0;
 	uintptr_t avAgentU = 0;
 	uintptr_t avAgentH = 0;
+	uintptr_t avAgentR = 0;
 };
 
 

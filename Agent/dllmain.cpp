@@ -52,7 +52,7 @@
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 ADDRESS address;
 Console console;
-std::unordered_map<std::string, uintptr_t> staticAddress;
+std::unordered_map<std::string, uintptr_t> refStringAddress;
 
 struct {
 	uintptr_t* target = 0;
@@ -79,27 +79,29 @@ void mapLoadedCall() {
 		}
 	}
 }
+void SetRefStringAddr(const std::vector<std::string>& strings) {
+	std::vector<uintptr_t> results = FindReadonlyStringRefByAry(strings);
+	for (size_t i = 0; i < results.size(); i++)
+	{
+		refStringAddress[strings[i]] = results[i];
+	}
+}
 void __fastcall GameLoopCB(uintptr_t ptr, int time, uintptr_t zero) {
 	uintptr_t replacedCB = *((uintptr_t*)(hook.replaced));
 	((uintptr_t(__thiscall*)(uintptr_t, int, uintptr_t))replacedCB)(ptr, time, zero);
 	if (!address.ready) {
-		// Gw2-64.exe+5C252D - call Gw2-64.exe+504A90
-		uintptr_t setLangFuncPtr = FollowRelativeAddress(FindReadonlyStringRef("ValidateLanguage(language)") + 0x24);
-		staticAddress["ValidateLanguage(language)"] = setLangFuncPtr;
-		uintptr_t getCharacterBasePtr = FollowRelativeAddress(FindReadonlyStringRef("ViewAdvanceCharacter") + 0xA);
-		staticAddress["ViewAdvanceCharacter"] = getCharacterBasePtr;
-		staticAddress["!m_state.TestBits(FLAG_ENTER_GAME)"] = FindReadonlyStringRef("!m_state.TestBits(FLAG_ENTER_GAME)");
-		uintptr_t getMapStateBasePtr = FollowRelativeAddress(FindReadonlyStringRef("ViewAdvanceUi") + 0xA);
-		staticAddress["ViewAdvanceUi"] = getMapStateBasePtr;
-		uintptr_t keyBindLoopStart = FindReadonlyStringRef("No valid case for switch variable 'EState'") + 0x71;
-		staticAddress["No valid case for switch variable 'EState'"] = keyBindLoopStart;
-		staticAddress["No valid case for switch variable 'EBind'"] = FindReadonlyStringRef("No valid case for switch variable 'EBind'");
-		staticAddress["progressToCheck"] = FindReadonlyStringRef("progressToCheck");
-		staticAddress["!(primaryEqual && secondaryEqual)"] = FindReadonlyStringRef("!(primaryEqual && secondaryEqual)");
-		staticAddress["avAgentArray"] = FindReadonlyStringRef("avAgentArray");
-		staticAddress["ViewAdvanceAgentView"] = FindReadonlyStringRef("ViewAdvanceAgentView");
-		
-
+		SetRefStringAddr({
+			"ValidateLanguage(language)",
+			"ViewAdvanceCharacter",
+			"!m_state.TestBits(FLAG_ENTER_GAME)",
+			"ViewAdvanceUi",
+			"No valid case for switch variable 'EState'",
+			"No valid case for switch variable 'EBind'",
+			"progressToCheck",
+			"!(primaryEqual && secondaryEqual)",
+			"avAgentArray",
+			"ViewAdvanceAgentView"
+			});
 
 		SetMapStateAddr();
 		SetLangAddr();
@@ -136,7 +138,6 @@ static DWORD WINAPI SetHook(LPVOID param) {
 	console.printf("address offset:%X\n", (long long)(&address) - (long long)(&__ImageBase));
 	return 0;
 }
-
 void mount()
 {
 	HANDLE hThread = CreateThread(NULL, 0, SetHook, NULL, 0, NULL);

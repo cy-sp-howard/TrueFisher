@@ -52,7 +52,7 @@ namespace BhModule.TrueFisher.Automatic
 
         public event EventHandler<ChangeEventArgs<bool>> Ready;
         public IntPtr BaseAddress { get => baseAddress; }
-        public IntPtr AddressData { get => IntPtr.Add(baseAddress, 0xC1A10); }
+        public IntPtr AddressData { get => IntPtr.Add(baseAddress, 0xC4A10); }
         IntPtr baseAddress;
         System.Timers.Timer checkReadyTimer;
         Process process
@@ -159,8 +159,8 @@ namespace BhModule.TrueFisher.Automatic
     }
     public static class NodeMem
     {
-        public static MemTrail Start => new(0x48, [0x8]);
-        public static MemTrail End => new(0x48, [0x10]);
+        public static MemTrail Start => new(0x70, [0x8]);
+        public static MemTrail End => new(0x70, [0x10]);
     }
 
     public static class SettingMem
