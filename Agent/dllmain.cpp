@@ -72,7 +72,12 @@ void mapLoadedCall() {
 		char mapState = *(char*)address.mapState;
 		if (mapState == 0xF) {
 			if (address.fish == 0) SetFishAddr();
-			if (address.scanned == false) SetAvAgent();
+			if (address.scanned == false) {
+				SetAvAgent();
+				SetAvModel();
+
+				address.scanned = true;
+			};
 		}
 		else {
 			OnMapChange();
@@ -100,7 +105,8 @@ void __fastcall GameLoopCB(uintptr_t ptr, int time, uintptr_t zero) {
 			"progressToCheck",
 			"!(primaryEqual && secondaryEqual)",
 			"avAgentArray",
-			"ViewAdvanceAgentView"
+			"ViewAdvanceAgentView",
+			"ModelAdvanceFiles"
 			});
 
 		SetMapStateAddr();

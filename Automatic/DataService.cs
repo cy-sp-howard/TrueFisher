@@ -52,7 +52,7 @@ namespace BhModule.TrueFisher.Automatic
 
         public event EventHandler<ChangeEventArgs<bool>> Ready;
         public IntPtr BaseAddress { get => baseAddress; }
-        public IntPtr AddressData { get => IntPtr.Add(baseAddress, 0xC4A10); }
+        public IntPtr AddressData { get => IntPtr.Add(baseAddress, 0xC5A10); }
         IntPtr baseAddress;
         System.Timers.Timer checkReadyTimer;
         Process process

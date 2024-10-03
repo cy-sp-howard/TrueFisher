@@ -19,6 +19,7 @@ struct ADDRESS {
 	uintptr_t avAgentU = 0;
 	uintptr_t avAgentH = 0;
 	uintptr_t avAgentR = 0;
+	uintptr_t avModels = 0;
 };
 
 
@@ -33,5 +34,6 @@ void SetFishAddr();
 void SetMapStateAddr();
 void SetKeyBindsAddr();
 void SetAvAgent();
+void SetAvModel();
 void OnMapChange();
 uintptr_t GetPtr(uintptr_t);

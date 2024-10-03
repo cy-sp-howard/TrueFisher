@@ -15,6 +15,7 @@ std::vector<uintptr_t> avAgentItems;
 std::vector<uintptr_t> avAgentUnknown;
 std::vector<uintptr_t> avAgentGadgetFishHoles;
 std::vector<uintptr_t> avAgentGadgetResourceNodes;
+std::vector<uintptr_t> avModels;
 
 void printOffset(const char* str, uintptr_t* addr) {
 	long long offset = (long long)addr - ((long long)&address);
@@ -119,6 +120,7 @@ void SetFishAddr() {
 	// Gw2-64.exe+7557BE - mov rcx,[rbx+000000D0]
 	int chararcterOffset = *(int*)(callAddr + 0x61);
 	uintptr_t selfCharacter = *(uintptr_t*)(baseAddr + chararcterOffset);
+	console.printf("self character %p\n", selfCharacter);
 	uintptr_t chararcterFuncAry0 = *(uintptr_t*)selfCharacter;
 
 
@@ -262,7 +264,6 @@ void SetAvAgent() {
 
 	}
 
-	address.scanned = true;
 	console.printf("avAgent scanned\n");
 	if (address.avAgent0 == 0) {
 		address.avAgent0 = (uintptr_t)&avAgentCharacters;
@@ -280,6 +281,37 @@ void SetAvAgent() {
 		printOffset("avAgent aryB", &address.avAgentB);
 		printOffset("avAgent aryF", &address.avAgentF);
 		printOffset("avAgent aryU", &address.avAgentU);
+	}
+}
+void SetAvModel() {
+	avModels.clear();
+	//Gw2-64.exe+10415C8 - lea rdx,[Gw2-64.exe+275B348]
+	uintptr_t modelParentAryInfo = FollowRelativeAddress(refStringAddress["ModelAdvanceFiles"] + 0x260);
+	//Gw2-64.exe+10415D3 - call Gw2-64.exe+279730
+	uintptr_t item = *(uintptr_t*)(modelParentAryInfo + 0x10);
+	//Gw2-64.exe+1041600 - movsxd  rbx,dword ptr [rbp-01]
+	//Gw2-64.exe+1041604 - add rbx,rdi
+	//Gw2-64.exe+1041624 - mov rcx,[rbx+08]
+	uintptr_t nextItemOffset = *(int*)(modelParentAryInfo)+0x8;
+	while (item != 0)
+	{
+		//Gw2-64.exe+1032928 - cmp qword ptr [rbx+000001B0],00
+		uintptr_t model = *(uintptr_t*)(item + 0x1b0);
+		if (model != 0) {
+			float distance = *(float*)(*(uintptr_t*)(model + 0x8) + 0xb4);
+	/*		if (distance < 3) {
+				console.printf("test %p\n", item);
+			}*/
+			avModels.push_back(item);
+		}
+		item = *(uintptr_t*)(item + nextItemOffset);
+		//Gw2-64.exe+1041684 - mov rax,[rbp+0F]
+        //Gw2-64.exe+1041688 - test al,01
+		if ((item & 0b1) == 0b1) break;
+	}
+	if (address.avModels == 0) {
+		address.avModels = (uintptr_t)&avModels;
+		printOffset("avModel", &address.avModels);
 	}
 }
 
