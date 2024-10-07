@@ -37,7 +37,8 @@ namespace BhModule.TrueFisher.Automatic
             if (gameTime.TotalGameTime.TotalMilliseconds > nextScanTick)
             {
                 nextScanTick = gameTime.TotalGameTime.TotalMilliseconds + 5000;
-                getResources();
+                //getResources();
+                getModels();
             }
             float scaleRate = GameService.Graphics.UIScaleMultiplier; // screen.width * scake = window.width
             foreach (var dot in controlCollection)
@@ -74,6 +75,25 @@ namespace BhModule.TrueFisher.Automatic
                 {
                     nodes.Add(node);
                 }
+                currentNode = IntPtr.Add(currentNode, 0x8);
+            }
+            // prepare next scan
+            DataService.Write(FishMem.Scanned, [0]);
+        }
+        void getModels()
+        {
+            nodes.Clear();
+            IntPtr currentNode = DataService.Read<IntPtr>(ModelMem.Start).value;
+            IntPtr nodeEnd = DataService.Read<IntPtr>(ModelMem.End).value;
+
+            while (currentNode.ToInt64() < nodeEnd.ToInt64())
+            {
+                byte[] posBytes = MemUtil.ReadMem(DataService.Handle, currentNode, 12, [0x1b0,0x8,0x30]).value;
+                float x = BitConverter.ToSingle(posBytes, 0);
+                float y = BitConverter.ToSingle(posBytes, 4);
+                float z = BitConverter.ToSingle(posBytes, 8) * -1;
+                var node = new Hole(currentNode, new(x / 0.0254f, y / 0.0254f, z / 0.0254f));
+                nodes.Add(node);
                 currentNode = IntPtr.Add(currentNode, 0x8);
             }
             // prepare next scan

@@ -299,9 +299,9 @@ void SetAvModel() {
 		uintptr_t model = *(uintptr_t*)(item + 0x1b0);
 		if (model != 0) {
 			float distance = *(float*)(*(uintptr_t*)(model + 0x8) + 0xb4);
-	/*		if (distance < 3) {
-				console.printf("test %p\n", item);
-			}*/
+			//if (distance < 3) {
+			//	console.printf("test %p\n", item);
+			//}
 			avModels.push_back(item);
 		}
 		item = *(uintptr_t*)(item + nextItemOffset);

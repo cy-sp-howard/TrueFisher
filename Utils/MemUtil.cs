@@ -53,7 +53,11 @@ namespace BhModule.TrueFisher.Utils
             IntPtr bufferReadSize;
 
             ReadProcessMemory(hProcess, addr, buffer, buffer.Length, out bufferReadSize);
-            if (ptrOffsetList == null || ptrOffsetList.Count == 0 || bufferReadSize == IntPtr.Zero)
+            if(bufferReadSize == IntPtr.Zero)
+            {
+                return new Mem<byte[]>() { address = addr, value = new byte[memSize] };
+            }
+            else if (ptrOffsetList == null || ptrOffsetList.Count == 0)
             {
                 return new Mem<byte[]>() { address = addr, value = buffer };
             }
